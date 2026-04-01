@@ -1,0 +1,223 @@
+# ==============================
+# core/game_manager.py
+# ==============================
+from typing import List, Tuple
+
+Position = Tuple[int, int]
+Move = Tuple[Position, Position]
+
+
+class GameManager:
+    def __init__(self):
+        self.board = self._create_board()
+        self.current_turn = 'white'
+        self.game_over = False
+
+    def new_game(self):
+        self.board = self._create_board()
+        self.current_turn = 'white'
+        self.game_over = False
+
+    def _create_board(self):
+        return [
+            ['r','n','b','q','k','b','n','r'],
+            ['p','p','p','p','p','p','p','p'],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['P','P','P','P','P','P','P','P'],
+            ['R','N','B','Q','K','B','N','R']
+        ]
+
+    def resign(self):
+        self.game_over = True
+        return f"{self.current_turn} resigns"
+
+    def get_legal_moves(self, pos: Position) -> List[Position]:
+        if self.game_over:
+            return []
+
+        r, c = pos
+        piece = self.board[r][c]
+        if piece == '':
+            return []
+
+        moves = []
+        directions = [(-1,0),(1,0),(0,-1),(0,1)]
+
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < 8 and 0 <= nc < 8:
+                moves.append((nr, nc))
+
+        return moves
+
+    def move(self, start: Position, end: Position) -> bool:
+        if self.game_over:
+            return False
+
+        legal_moves = self.get_legal_moves(start)
+        if end not in legal_moves:
+            return False
+
+        r1, c1 = start
+        r2, c2 = end
+
+        self.board[r2][c2] = self.board[r1][c1]
+        self.board[r1][c1] = ''
+
+        self._switch_turn()
+        return True
+
+    def get_board(self):
+        return [row[:] for row in self.board]
+
+    def _switch_turn(self):
+        self.current_turn = 'black' if self.current_turn == 'white' else 'white'
+
+
+# ==============================
+# api/bot_interface.py
+# ==============================
+
+class BotInterface:
+    def choose_move(self, board, color):
+        raise NotImplementedError
+
+
+# ==============================
+# api/stockfish_bot.py
+# ==============================
+
+import os
+import random
+
+
+class StockfishBot(BotInterface):
+    def __init__(self):
+        self.api_key = os.getenv("STOCKFISH_API_KEY")
+
+    def choose_move(self, board, color):
+        moves = []
+        for r in range(8):
+            for c in range(8):
+                if board[r][c] != '':
+                    directions = [(-1,0),(1,0),(0,-1),(0,1)]
+                    for dr, dc in directions:
+                        nr, nc = r + dr, c + dc
+                        if 0 <= nr < 8 and 0 <= nc < 8:
+                            moves.append(((r,c),(nr,nc)))
+
+        return random.choice(moves) if moves else None
+
+
+# ==============================
+# controller/controller.py
+# ==============================
+
+class GameController:
+    def __init__(self, game_manager, bot=None):
+        self.game = game_manager
+        self.bot = bot
+
+    def player_move(self, start, end):
+        success = self.game.move(start, end)
+
+        if success and self.bot:
+            bot_move = self.bot.choose_move(self.game.get_board(), 'black')
+            if bot_move:
+                self.game.move(*bot_move)
+
+        return success
+
+    def get_board(self):
+        return self.game.get_board()
+
+
+# ==============================
+# gui/pygame_gui.py
+# ==============================
+
+import pygame
+
+
+class PygameGUI:
+    def __init__(self, controller):
+        pygame.init()
+        self.controller = controller
+        self.size = 600
+        self.rows = 8
+        self.square_size = self.size // self.rows
+        self.screen = pygame.display.set_mode((self.size, self.size))
+        pygame.display.set_caption("Chess")
+        self.selected = None
+
+    def draw_board(self):
+        colors = [(240,217,181), (181,136,99)]
+        board = self.controller.get_board()
+
+        for r in range(8):
+            for c in range(8):
+                color = colors[(r+c)%2]
+                pygame.draw.rect(self.screen, color,
+                                 (c*self.square_size, r*self.square_size,
+                                  self.square_size, self.square_size))
+
+                piece = board[r][c]
+                if piece != '':
+                    font = pygame.font.SysFont(None, 36)
+                    text = font.render(piece, True, (0,0,0))
+                    self.screen.blit(text, (c*self.square_size+20, r*self.square_size+20))
+
+    def get_square_from_mouse(self, pos):
+        x, y = pos
+        row = y // self.square_size
+        col = x // self.square_size
+        return (row, col)
+
+    def start(self):
+        running = True
+
+        while running:
+            self.draw_board()
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    square = self.get_square_from_mouse(pos)
+
+                    if self.selected is None:
+                        self.selected = square
+                    else:
+                        self.controller.player_move(self.selected, square)
+                        self.selected = None
+
+        pygame.quit()
+
+
+# ==============================
+# main.py
+# ==============================
+
+from core.game_manager import GameManager
+from controller.controller import GameController
+from api.stockfish_bot import StockfishBot
+from gui.pygame_gui import PygameGUI
+
+
+def main():
+    game = GameManager()
+    bot = StockfishBot()
+    controller = GameController(game, bot)
+
+    gui = PygameGUI(controller)
+    gui.start()
+
+
+if __name__ == "__main__":
+    main()
