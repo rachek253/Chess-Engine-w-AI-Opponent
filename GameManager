@@ -199,15 +199,71 @@ class PygameGUI:
 
         pygame.quit()
 
+from enum import Enum
+
+class GUIStates(Enum):
+    MENU = 1
+    PIECE = 2
+    MOVE = 3
+
+class AlternateGUI:
+    x_size = 800
+    y_size = 600
+    square_size = (int) (y_size / 8)
+    dot_size = (int) (square_size / 4)
+    title = "Chess"
+
+    def __init__(self):
+        self.state = GUIStates.MENU
+        pygame.init()
+        self.screen = pygame.display.set_mode(self.x_size, self.y_size)
+
+        self.board_img = pygame.image.load("rect-8x8.png").convert()
+        self.board_img = pygame.transform.scale(self.board_img, (self.y_size,self.y_size))
+        self.dot_img = pygame.image.load("grey_dot.png").convert_alpha()
+        self.dot_img = pygame.transform.scale(self.dot_img, (self.dot_size, self.dot_size))
+        self.wp = pygame.transform.scale(pygame.image.load("white-pawn.png").convert_alpha(), (self.square_size,self.square_size))
+        self.wn = pygame.transform.scale(pygame.image.load("white-knight.png").convert_alpha(), (self.square_size,self.square_size))
+        self.wb = pygame.transform.scale(pygame.image.load("white-bishop.png").convert_alpha(), (self.square_size,self.square_size))
+        self.wr = pygame.transform.scale(pygame.image.load("white-rook.png").convert_alpha(), (self.square_size,self.square_size))
+        self.wq = pygame.transform.scale(pygame.image.load("white-queen.png").convert_alpha(), (self.square_size,self.square_size))
+        self.wk = pygame.transform.scale(pygame.image.load("white-king.png").convert_alpha(), (self.square_size,self.square_size))
+        self.bp = pygame.transform.scale(pygame.image.load("black-pawn.png").convert_alpha(), (self.square_size,self.square_size))
+        self.bn = pygame.transform.scale(pygame.image.load("black-knight.png").convert_alpha(), (self.square_size,self.square_size))
+        self.bb = pygame.transform.scale(pygame.image.load("black-bishop.png").convert_alpha(), (self.square_size,self.square_size))
+        self.br = pygame.transform.scale(pygame.image.load("black-rook.png").convert_alpha(), (self.square_size,self.square_size))
+        self.bq = pygame.transform.scale(pygame.image.load("black-queen.png").convert_alpha(), (self.square_size,self.square_size))
+        self.bk = pygame.transform.scale(pygame.image.load("black-king.png").convert_alpha(), (self.square_size,self.square_size))
+
+        self.board = [
+            ["R","N","B","Q","K","B","N","R"],
+            ["P","P","P","P","P","P","P","P"],
+            ["0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0"],
+            ["0","0","0","0","0","0","0","0"],
+            ["p","p","p","p","p","p","p","p"],
+            ["r","n","b","q","k","b","n","r"],
+        ]
+
+    def draw_board(self):
+        self.screen.blit(self.board_img,(0,0))
+    
+    def draw_pieces(self):
+        for row in range(8):
+            for column in range(8):
+                x = column * self.square_size
+                y = column * self.square_size
+
 
 # ==============================
 # main.py
 # ==============================
 
-from core.game_manager import GameManager
-from controller.controller import GameController
-from api.stockfish_bot import StockfishBot
-from gui.pygame_gui import PygameGUI
+#from core.game_manager import GameManager
+#from controller.controller import GameController
+#from api.stockfish_bot import StockfishBot
+#from gui.pygame_gui import PygameGUI
 
 
 def main():
