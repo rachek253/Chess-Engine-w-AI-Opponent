@@ -44,13 +44,23 @@ def main():
                 print("Resign")
                 #TODO: Add resign code here
             case MenuControls.MOVESELECT:
+                #feel free to rename the left hand side variables
+                piece = result.piece # FEN name of piece selected
+                square_from = result.coords # 0-63 coordinates of piece selected
+                square_to = result.move # 0-63 coordinates of move selected
+
                 print("Move Select")
                 #TODO: Add move select code here
             case MenuControls.PIECESELECT:
+                #feel free to rename the left hand side variables
+                piece = result.piece # FEN name of piece selected
+                square = result.coords # 0-63 coordinates of piece selected
+
                 print("Piece Select")
                 #TODO: Add piece select code here
             case MenuControls.DONOTHING:
-                #should never be called, not sure if theres anything we want to do here
+                #idk if theres anything we need to do here, this is just the
+                #do nothing case which mostly is a safety net in my gui code
                 print("Do Nothing")
         #END GUI RESULT HANDLING
 
