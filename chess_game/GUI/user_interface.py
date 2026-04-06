@@ -13,6 +13,7 @@ This configuration module is responsible for:
 4. Properly closing pygame
 """
 import os
+from tkinter import font
 import pygame
 from enum import Enum
 
@@ -51,6 +52,14 @@ class MenuButton:
             return GUIreturn(self.type)
         else:
             return None
+        
+    def draw_button(self, screen, font):
+        pygame.draw.rect(screen, (80, 80, 80), self.rect)
+        pygame.draw.rect(screen, (200, 200, 200), self.rect, 2)
+
+        text_surface = font.render(self.label, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
 
 class GUI:
     """Main graphical user interface for displaying the board and menu controls."""
@@ -84,6 +93,7 @@ class GUI:
         pygame.init()
         self.screen = pygame.display.set_mode((self.x_size, self.y_size))
         pygame.display.set_caption(self.title)
+        self.font = pygame.font.Font(None, 32)
 
         image_folder = "Images"
 
@@ -211,6 +221,11 @@ class GUI:
             x = column * self.square_size + (self.square_size - self.dot_size) // 2
             y = row * self.square_size + (self.square_size - self.dot_size) // 2
             self.screen.blit(self.dot_img, (x, y))
+
+    def _draw_menu(self):
+        """Draw the side panel menu with buttons."""
+        self.new_game_button.draw_button(self.screen, self.font)
+        self.resign_button.draw_button(self.screen, self.font)
             
     def _handle_board_click(self, pos):
         """Translate a board-area click into piece selection or move selection."""
