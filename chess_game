@@ -1,0 +1,5 @@
+chess_game file contains the following:
+- The main file script to run the chess engine
+- gitignore file w env file
+- API key and other necessary environment variables
+- chess_requirements txt (necessary Python libraries required)
