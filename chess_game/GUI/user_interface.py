@@ -107,9 +107,9 @@ class GUI:
 
         image_folder = os.path.join("chess_game","GUI","Images")
 
-        self.board_img = pygame.image.load(os.path.join(image_folder, "rect-8x8.png")).convert()
+        self.board_img = pygame.image.load(os.path.join(image_folder, "chess_board.png")).convert()
         self.board_img = pygame.transform.scale(self.board_img, (self.y_size, self.y_size))
-        self.dot_img = pygame.image.load(os.path.join(image_folder, "grey_dot.png")).convert()
+        self.dot_img = pygame.image.load(os.path.join(image_folder, "grey_dot.png")).convert_alpha()
         self.dot_img = pygame.transform.scale(self.dot_img, (self.dot_size, self.dot_size))
         self.piece_imgs = {
             "wp": pygame.transform.scale(pygame.image.load(os.path.join(image_folder, "white-pawn.png")).convert_alpha(),(self.square_size, self.square_size)),
