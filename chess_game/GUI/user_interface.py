@@ -13,7 +13,6 @@ This configuration module is responsible for:
 4. Properly closing pygame
 """
 import os
-from tkinter import font
 import pygame
 from enum import Enum
 
