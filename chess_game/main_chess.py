@@ -12,10 +12,10 @@ classes for the chess engine as we make files for them! - Rachel
 """
 # insert main file code here
 import pygame
-from chess_game.GUI.user_interface import UserInterface, GUIreturn, MenuControls
+from GUI.user_interface import GUI, GUIreturn, MenuControls
 
 def main():
-    gui = UserInterface()
+    gui = GUI()
     clock = pygame.time.Clock()
     running = True
 
@@ -25,9 +25,9 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             else:
-                result = gui.handle_event(event)
-                if result is not None:
-                    print(result)
+                result = gui.handle_input(event)
+                #if result is not None:
+                    #print(result)
 
         gui.draw_all()
         pygame.display.flip()
@@ -50,6 +50,7 @@ def main():
                 square_to = result.move # 0-63 coordinates of move selected
 
                 print("Move Select")
+                print(f"Piece: {piece}, From: {square_from}, To: {square_to}")
                 #TODO: Add move select code here
             case MenuControls.PIECESELECT:
                 #feel free to rename the left hand side variables
@@ -57,6 +58,7 @@ def main():
                 square = result.coords # 0-63 coordinates of piece selected
 
                 print("Piece Select")
+                print(f"Piece: {piece}, Square: {square}")
                 #TODO: Add piece select code here
             case MenuControls.DONOTHING:
                 #idk if theres anything we need to do here, this is just the
@@ -65,3 +67,6 @@ def main():
         #END GUI RESULT HANDLING
 
     pygame.quit
+
+if __name__ == "__main__":
+    main()

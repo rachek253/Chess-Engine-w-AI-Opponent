@@ -95,7 +95,7 @@ class GUI:
         pygame.display.set_caption(self.title)
         self.font = pygame.font.Font(None, 32)
 
-        image_folder = "Images"
+        image_folder = os.path.join("chess_game","GUI","Images")
 
         self.board_img = pygame.image.load(os.path.join(image_folder, "rect-8x8.png")).convert()
         self.board_img = pygame.transform.scale(self.board_img, (self.y_size, self.y_size))
@@ -134,6 +134,7 @@ class GUI:
         self._draw_board()
         self._draw_pieces()
         self._draw_dots()
+        self._draw_menu()
         pygame.display.flip()
 
     def set_possible_moves(self, moves:int):
