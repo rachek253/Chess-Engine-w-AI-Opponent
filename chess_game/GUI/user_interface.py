@@ -28,6 +28,7 @@ class MenuControls(Enum):
     PIECESELECT = 3
     MOVESELECT = 4
     DONOTHING = 5
+    NEWBOTGAME = 6
 
 class GUIreturn:
     """Container for a GUI action result sent back to the game controller."""
@@ -53,7 +54,7 @@ class MenuButton:
             #print("Button clicked")
             return GUIreturn(self.type)
         else:
-            return GUIreturn(MenuControls.DONOTHING)
+            return None
         
     def draw_button(self, screen, font):
         pygame.draw.rect(screen, (80, 80, 80), self.rect)
@@ -66,13 +67,13 @@ class MenuButton:
 class GUI:
     """Main graphical user interface for displaying the board and menu controls."""
 
-    x_size = 800
-    y_size = 600
+    x_size = 1440
+    y_size = 810
     square_size = y_size // 8
     dot_size = square_size // 4
 
     button_width = (x_size - y_size) * 3 // 4
-    button_height = x_size // 3
+    button_height = y_size // 5
     button_offset = (x_size - y_size) // 8
 
     title = "Chess"
@@ -83,9 +84,16 @@ class GUI:
         (y_size + button_offset, button_offset, button_width, button_height),
         MenuControls.NEWGAME,
     )
+
+    new_bot_game_button = MenuButton(
+        "New Bot Game",
+        (y_size + button_offset, 2 * button_offset + button_height, button_width, button_height),
+        MenuControls.NEWBOTGAME,
+    )
+
     resign_button = MenuButton(
         "Resign",
-        (y_size + button_offset, 2 * button_offset + button_height, button_width, button_height),
+        (y_size + button_offset, 3 * button_offset + 2 * button_height, button_width, button_height),
         MenuControls.RESIGN,
     )
 
@@ -101,7 +109,7 @@ class GUI:
 
         self.board_img = pygame.image.load(os.path.join(image_folder, "rect-8x8.png")).convert()
         self.board_img = pygame.transform.scale(self.board_img, (self.y_size, self.y_size))
-        self.dot_img = pygame.image.load(os.path.join(image_folder, "grey_dot.png")).convert_alpha()
+        self.dot_img = pygame.image.load(os.path.join(image_folder, "grey_dot.png")).convert()
         self.dot_img = pygame.transform.scale(self.dot_img, (self.dot_size, self.dot_size))
         self.piece_imgs = {
             "wp": pygame.transform.scale(pygame.image.load(os.path.join(image_folder, "white-pawn.png")).convert_alpha(),(self.square_size, self.square_size)),
@@ -139,7 +147,7 @@ class GUI:
         self._draw_menu()
         pygame.display.flip()
 
-    def set_possible_moves(self, moves:int):
+    def set_possible_moves(self, moves:list):
         """Store the legal target squares for the currently selected piece."""
         self.possible_moves = moves
         for move in self.possible_moves:
@@ -150,13 +158,13 @@ class GUI:
         """Convert a pygame mouse event into a GUI control action."""
         #print("Input detected")
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print("Mouse button down")
+            #print("Mouse button down")
             (x, y) = event.pos
             if x <= self.y_size:
-                print("Board click")
+                #print("Board click")
                 return self._handle_board_click((x, y))
             else:
-                print("Menu click")
+                #print("Menu click")
                 return self._handle_menu_click((x, y))
         else:
             return GUIreturn(MenuControls.DONOTHING)
@@ -238,6 +246,7 @@ class GUI:
     def _draw_menu(self):
         """Draw the side panel menu with buttons."""
         self.new_game_button.draw_button(self.screen, self.font)
+        self.new_bot_game_button.draw_button(self.screen, self.font)
         self.resign_button.draw_button(self.screen, self.font)
             
     def _handle_board_click(self, pos):
@@ -299,19 +308,27 @@ class GUI:
             for move in self.possible_moves:
                 if move == move_square:
                     self.selected_square = None
-                    return GUIreturn(MenuControls.MOVESELECT, selected_piece, self.selected_square, move_square)
+                    return GUIreturn(MenuControls.MOVESELECT, selected_piece, selected_x + 8 * selected_y, move_square)
 
             return GUIreturn(MenuControls.DONOTHING)
 
     def _handle_menu_click(self, pos):
         """Handle clicks in the menu panel and return the selected menu action."""
-        print("Handle menu click")
+        #print("Handle menu click")
+        new_game = None
+        resign = None
+        new_bot_game = None
         new_game = self.new_game_button.use_button(pos)
         resign = self.resign_button.use_button(pos)
+        new_bot_game = self.new_bot_game_button.use_button(pos)
         if new_game is not None:
             self.state = GUIStates.PIECE
             return new_game
         elif resign is not None:
+            self.state = GUIStates.MENU
             return resign
+        elif new_bot_game is not None:
+            self.state = GUIStates.PIECE
+            return new_bot_game
         else:
             return GUIreturn(MenuControls.DONOTHING)

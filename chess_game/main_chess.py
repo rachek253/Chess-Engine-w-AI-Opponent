@@ -27,8 +27,6 @@ def main():
                 running = False
             else:
                 result : GUIreturn = gui.handle_input(event)
-                #if result is not None:
-                    #print(result)
 
         gui.draw_all()
         pygame.display.flip()
@@ -40,9 +38,21 @@ def main():
         match type:
             #should remove prints eventually, just here for testing purposes
             case MenuControls.NEWGAME:
+
+                gui.set_possible_moves([])
+
                 print("New Game")
                 #TODO: Add new game code here
+            case MenuControls.NEWBOTGAME:
+
+                gui.set_possible_moves([])
+
+                print("New Bot Game")
+                #TODO: Add new bot game code here
             case MenuControls.RESIGN:
+
+                gui.set_possible_moves([])
+
                 print("Resign")
                 #TODO: Add resign code here
             case MenuControls.MOVESELECT:
@@ -58,6 +68,8 @@ def main():
                 #feel free to rename the left hand side variables
                 piece = result.piece # FEN name of piece selected
                 square = result.coords # 0-63 coordinates of piece selected
+
+                gui.set_possible_moves([16,17,18,19])
 
                 print("Piece Select")
                 print(f"Piece: {piece}, Square: {square}")
