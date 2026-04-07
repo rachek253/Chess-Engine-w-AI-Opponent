@@ -322,13 +322,14 @@ class GUI:
         new_game = self.new_game_button.use_button(pos)
         resign = self.resign_button.use_button(pos)
         new_bot_game = self.new_bot_game_button.use_button(pos)
-        if new_game is not None:
+        if (new_game is not None) and (self.state is GUIStates.MENU):
             self.state = GUIStates.PIECE
             return new_game
-        elif resign is not None:
+        elif (resign is not None) and (self.state is not GUIStates.MENU):
             self.state = GUIStates.MENU
             return resign
-        elif new_bot_game is not None:
+            
+        elif (new_bot_game is not None) and (self.state is GUIStates.MENU):
             self.state = GUIStates.PIECE
             return new_bot_game
         else:
