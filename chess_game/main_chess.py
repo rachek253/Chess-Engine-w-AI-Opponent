@@ -71,7 +71,9 @@ def main():
                 piece = result.piece # FEN name of piece selected
                 square = result.coords # 0-63 coordinates of piece selected
 
-                gui.set_possible_moves([16,17,18,19])
+                move_list = [24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]
+
+                gui.set_possible_moves(move_list)
 
                 print("Piece Select")
                 print(f"Piece: {piece}, Square: {square}")

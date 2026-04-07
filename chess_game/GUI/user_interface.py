@@ -307,10 +307,12 @@ class GUI:
 
             for move in self.possible_moves:
                 if move == move_square:
+                    self.possible_moves.clear()
                     self.selected_square = None
                     self.FEN_piece = None
                     return GUIreturn(MenuControls.MOVESELECT, temp_FEN_piece, temp_selected_square, move_square)
 
+            self.possible_moves.clear()
             return GUIreturn(MenuControls.DONOTHING)
 
     def _handle_menu_click(self, pos):
