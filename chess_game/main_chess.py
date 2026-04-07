@@ -38,20 +38,20 @@ def main():
         match type:
             #should remove prints eventually, just here for testing purposes
             case MenuControls.NEWGAME:
-
                 gui.set_possible_moves([])
+                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
                 print("New Game")
                 #TODO: Add new game code here
             case MenuControls.NEWBOTGAME:
-
                 gui.set_possible_moves([])
+                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
                 print("New Bot Game")
                 #TODO: Add new bot game code here
             case MenuControls.RESIGN:
-
                 gui.set_possible_moves([])
+                gui.update_board("8/8/8/4k3/3K4/8/8/8 w - - 0 0")
 
                 print("Resign")
                 #TODO: Add resign code here
@@ -77,6 +77,8 @@ def main():
             case MenuControls.DONOTHING:
                 #idk if theres anything we need to do here, this is just the
                 #do nothing case which mostly is a safety net in my gui code
+                #so this does actually get called a lot, i don't think there's
+                #anything we should put in here but it's here if we change our minds
                 #print("Do Nothing")
                 pass
             case _:

@@ -67,33 +67,34 @@ class MenuButton:
 class GUI:
     """Main graphical user interface for displaying the board and menu controls."""
 
-    x_size = 1440
-    y_size = 810
+    x_size = 1000
+    y_size = 650
     square_size = y_size // 8
     dot_size = square_size // 4
 
     button_width = (x_size - y_size) * 3 // 4
     button_height = y_size // 5
-    button_offset = (x_size - y_size) // 8
+    button_x_offset = (x_size - y_size) // 8
+    button_y_offset = y_size // 10
 
     title = "Chess"
 
     # Buttons for starting a new game and resigning.
     new_game_button = MenuButton(
         "New Game",
-        (y_size + button_offset, button_offset, button_width, button_height),
+        (y_size + button_x_offset, button_y_offset, button_width, button_height),
         MenuControls.NEWGAME,
     )
 
     new_bot_game_button = MenuButton(
         "New Bot Game",
-        (y_size + button_offset, 2 * button_offset + button_height, button_width, button_height),
+        (y_size + button_x_offset, 2 * button_y_offset + button_height, button_width, button_height),
         MenuControls.NEWBOTGAME,
     )
 
     resign_button = MenuButton(
         "Resign",
-        (y_size + button_offset, 3 * button_offset + 2 * button_height, button_width, button_height),
+        (y_size + button_x_offset, 3 * button_y_offset + 2 * button_height, button_width, button_height),
         MenuControls.RESIGN,
     )
 
@@ -270,45 +271,45 @@ class GUI:
                 self.selected_square = square_num
                 match piece:
                     case "bp":
-                        FEN_piece = "p"
+                        self.FEN_piece = "p"
                     case "bn":
-                        FEN_piece = "n"
+                        self.FEN_piece = "n"
                     case "bb":
-                        FEN_piece = "b"
+                        self.FEN_piece = "b"
                     case "br":
-                        FEN_piece = "r"
+                        self.FEN_piece = "r"
                     case "bq":
-                        FEN_piece = "q"
+                        self.FEN_piece = "q"
                     case "bk":
-                        FEN_piece = "k"
+                        self.FEN_piece = "k"
                     case "wp":
-                        FEN_piece = "P"
+                        self.FEN_piece = "P"
                     case "wn":
-                        FEN_piece = "N"
+                        self.FEN_piece = "N"
                     case "wb":
-                        FEN_piece = "B"
+                        self.FEN_piece = "B"
                     case "wr":
-                        FEN_piece = "R"
+                        self.FEN_piece = "R"
                     case "wq":
-                        FEN_piece = "Q"
+                        self.FEN_piece = "Q"
                     case "wk":
-                        FEN_piece = "K"
+                        self.FEN_piece = "K"
 
-                return GUIreturn(MenuControls.PIECESELECT, FEN_piece, square_num)
+                return GUIreturn(MenuControls.PIECESELECT, self.FEN_piece, square_num)
 
         if self.state == GUIStates.MOVE:
             # Move selection stage: choose a legal destination square.
             self.state = GUIStates.PIECE
-            selected_x = self.selected_square % 8
-            selected_y = self.selected_square // 8
-            selected_piece = self.board[selected_y][selected_x]
+            temp_selected_square = self.selected_square
+            temp_FEN_piece = self.FEN_piece
 
             move_square = column + 8 * row
 
             for move in self.possible_moves:
                 if move == move_square:
                     self.selected_square = None
-                    return GUIreturn(MenuControls.MOVESELECT, selected_piece, selected_x + 8 * selected_y, move_square)
+                    self.FEN_piece = None
+                    return GUIreturn(MenuControls.MOVESELECT, temp_FEN_piece, temp_selected_square, move_square)
 
             return GUIreturn(MenuControls.DONOTHING)
 
