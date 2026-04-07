@@ -27,11 +27,12 @@ def main():
                 running = False
             else:
                 result : GUIreturn = gui.handle_input(event)
+        #END GUI EVENT HANDLING
 
+        #GUI DRAWING
         gui.draw_all()
         pygame.display.flip()
-        clock.tick(60)
-        #END GUI EVENT HANDLING
+        #END GUI DRAWING
 
         #GUI RESULT HANDLING
         type = result.type
@@ -88,6 +89,9 @@ def main():
             case _:
                 print("Unknown result")
         #END GUI RESULT HANDLING
+
+        #leave this at the end, limits game to 60 frames per second, which is plenty
+        clock.tick(60)
 
     pygame.quit
 
