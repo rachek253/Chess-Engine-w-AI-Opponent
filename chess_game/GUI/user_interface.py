@@ -48,10 +48,12 @@ class MenuButton:
     
     def use_button(self, pos):
         """Return a GUIreturn if the provided mouse position is inside the button."""
+        #print("Use button")
         if self.rect.collidepoint(pos):
+            #print("Button clicked")
             return GUIreturn(self.type)
         else:
-            return None
+            return GUIreturn(MenuControls.DONOTHING)
         
     def draw_button(self, screen, font):
         pygame.draw.rect(screen, (80, 80, 80), self.rect)
@@ -69,9 +71,9 @@ class GUI:
     square_size = y_size // 8
     dot_size = square_size // 4
 
-    button_width = (y_size - x_size) * 3 // 4
+    button_width = (x_size - y_size) * 3 // 4
     button_height = x_size // 3
-    button_offset = (y_size - x_size) // 8
+    button_offset = (x_size - y_size) // 8
 
     title = "Chess"
 
@@ -146,12 +148,18 @@ class GUI:
 
     def handle_input(self, event):
         """Convert a pygame mouse event into a GUI control action."""
+        #print("Input detected")
         if event.type == pygame.MOUSEBUTTONDOWN:
+            print("Mouse button down")
             (x, y) = event.pos
             if x <= self.y_size:
+                print("Board click")
                 return self._handle_board_click((x, y))
             else:
+                print("Menu click")
                 return self._handle_menu_click((x, y))
+        else:
+            return GUIreturn(MenuControls.DONOTHING)
             
     def update_board(self, fen:str):
         """Parse a FEN string and update the internal board matrix."""
@@ -199,6 +207,10 @@ class GUI:
 
         self.board = new_board
 
+    def set_state(self, new_state:GUIStates):
+        """Set the current GUI state (MENU, PIECE, or MOVE)."""
+        self.state = new_state
+
     def _draw_board(self):
         """Draw the chess board background at the origin of the window."""
         self.screen.blit(self.board_img, (0, 0))
@@ -245,7 +257,7 @@ class GUI:
                 return GUIreturn(MenuControls.DONOTHING)
             else:
                 self.state = GUIStates.MOVE
-                square_num = row + 8 * column
+                square_num = column + 8 * row
                 self.selected_square = square_num
                 match piece:
                     case "bp":
@@ -277,15 +289,15 @@ class GUI:
 
         if self.state == GUIStates.MOVE:
             # Move selection stage: choose a legal destination square.
+            self.state = GUIStates.PIECE
             selected_x = self.selected_square % 8
             selected_y = self.selected_square // 8
             selected_piece = self.board[selected_y][selected_x]
 
-            move_square = row + 8 * column
+            move_square = column + 8 * row
 
             for move in self.possible_moves:
                 if move == move_square:
-                    self.state = GUIStates.PIECE
                     self.selected_square = None
                     return GUIreturn(MenuControls.MOVESELECT, selected_piece, self.selected_square, move_square)
 
@@ -293,6 +305,7 @@ class GUI:
 
     def _handle_menu_click(self, pos):
         """Handle clicks in the menu panel and return the selected menu action."""
+        print("Handle menu click")
         new_game = self.new_game_button.use_button(pos)
         resign = self.resign_button.use_button(pos)
         if new_game is not None:

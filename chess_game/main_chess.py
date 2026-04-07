@@ -20,12 +20,13 @@ def main():
     running = True
 
     while running:
+        result = GUIreturn(MenuControls.DONOTHING) #default result, will be overwritten by event handling if an event is detected
         #GUI EVENT HANDLING
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             else:
-                result = gui.handle_input(event)
+                result : GUIreturn = gui.handle_input(event)
                 #if result is not None:
                     #print(result)
 
@@ -35,7 +36,8 @@ def main():
         #END GUI EVENT HANDLING
 
         #GUI RESULT HANDLING
-        match result:
+        type = result.type
+        match type:
             #should remove prints eventually, just here for testing purposes
             case MenuControls.NEWGAME:
                 print("New Game")
@@ -63,7 +65,10 @@ def main():
             case MenuControls.DONOTHING:
                 #idk if theres anything we need to do here, this is just the
                 #do nothing case which mostly is a safety net in my gui code
-                print("Do Nothing")
+                #print("Do Nothing")
+                pass
+            case _:
+                print("Unknown result")
         #END GUI RESULT HANDLING
 
     pygame.quit
