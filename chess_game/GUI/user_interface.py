@@ -141,6 +141,7 @@ class GUI:
 
     def draw_all(self):
         """Render the board, pieces, and legal-move indicators every frame."""
+        self.screen.fill((0, 0, 0))
         self._draw_board()
         self._draw_pieces()
         self._draw_dots()
@@ -245,9 +246,11 @@ class GUI:
 
     def _draw_menu(self):
         """Draw the side panel menu with buttons."""
-        self.new_game_button.draw_button(self.screen, self.font)
-        self.new_bot_game_button.draw_button(self.screen, self.font)
-        self.resign_button.draw_button(self.screen, self.font)
+        if self.state == GUIStates.MENU:
+            self.new_game_button.draw_button(self.screen, self.font)
+            self.new_bot_game_button.draw_button(self.screen, self.font)
+        else:
+            self.resign_button.draw_button(self.screen, self.font)
             
     def _handle_board_click(self, pos):
         """Translate a board-area click into piece selection or move selection."""
