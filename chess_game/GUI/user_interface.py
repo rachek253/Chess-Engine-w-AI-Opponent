@@ -72,9 +72,9 @@ class GUI:
     dot_size = square_size // 4
 
     button_width = (x_size - y_size) * 3 // 4
-    button_height = y_size // 5
+    button_height = y_size // 6
     button_x_offset = (x_size - y_size) // 8
-    button_y_offset = y_size // 10
+    button_y_offset = y_size // 12
 
     title = "Chess"
 
@@ -138,6 +138,7 @@ class GUI:
         ]
 
         self.possible_moves = []
+        self.active_color = 'w'
 
     def draw_all(self):
         """Render the board, pieces, and legal-move indicators every frame."""
@@ -189,6 +190,7 @@ class GUI:
 
         # Extract only the board layout portion from the full FEN string.
         board_part = fen.split()[0]
+        self.active_color = fen.split()[1]
         rows = board_part.split("/")
 
         if len(rows) != 8:
@@ -251,9 +253,92 @@ class GUI:
             self.new_bot_game_button.draw_button(self.screen, self.font)
         else:
             self.resign_button.draw_button(self.screen, self.font)
+            if self.active_color == 'w':
+                active_player_text = "White's Turn"
+            elif self.active_color == 'b':
+                active_player_text = "Black's Turn"
+            else:
+                active_player_text = "Invalid active color"
+            active_move = MenuButton(active_player_text,
+                (self.y_size + self.button_x_offset, 4 * self.button_y_offset + 3 * self.button_height, self.button_width, self.button_height - self.button_y_offset),
+                MenuControls.DONOTHING)
+            active_move.draw_button(self.screen, self.font)
             
     def _handle_board_click(self, pos):
         """Translate a board-area click into piece selection or move selection."""
+        (x, y) = pos
+        column = x // self.square_size
+        row = y // self.square_size
+
+        # Ignore clicks outside the board or while the GUI is in the menu state.
+        if not (0 <= row < 8 and 0 <= column < 8) or self.state == GUIStates.MENU:
+            return GUIreturn(MenuControls.DONOTHING)
+
+        if self.state == GUIStates.PIECE:
+            # Piece selection stage: select the piece at the clicked square.
+            piece = self.board[row][column]
+            if piece is None:
+                return GUIreturn(MenuControls.DONOTHING)
+            else:
+                if self.active_color == 'b' and piece.startswith('w'):
+                    return GUIreturn(MenuControls.DONOTHING)
+                elif self.active_color == 'w' and piece.startswith('b'):
+                    return GUIreturn(MenuControls.DONOTHING)
+                elif self.black_is_disabled and piece.startswith('b'):
+                    return GUIreturn(MenuControls.DONOTHING)
+                else:
+                    self.state = GUIStates.MOVE
+                    square_num = column + 8 * row
+                    self.selected_square = square_num
+                    match piece:
+                        case "bp":
+                            self.FEN_piece = "p"
+                        case "bn":
+                            self.FEN_piece = "n"
+                        case "bb":
+                            self.FEN_piece = "b"
+                        case "br":
+                            self.FEN_piece = "r"
+                        case "bq":
+                            self.FEN_piece = "q"
+                        case "bk":
+                            self.FEN_piece = "k"
+                        case "wp":
+                            self.FEN_piece = "P"
+                        case "wn":
+                            self.FEN_piece = "N"
+                        case "wb":
+                            self.FEN_piece = "B"
+                        case "wr":
+                            self.FEN_piece = "R"
+                        case "wq":
+                            self.FEN_piece = "Q"
+                        case "wk":
+                            self.FEN_piece = "K"
+
+                    return GUIreturn(MenuControls.PIECESELECT, self.FEN_piece, square_num)
+
+        if self.state == GUIStates.MOVE:
+            # Move selection stage: choose a legal destination square.
+            self.state = GUIStates.PIECE
+            temp_selected_square = self.selected_square
+            temp_FEN_piece = self.FEN_piece
+
+            move_square = column + 8 * row
+
+            for move in self.possible_moves:
+                if move == move_square:
+                    self.possible_moves.clear()
+                    self.selected_square = None
+                    self.FEN_piece = None
+                    return GUIreturn(MenuControls.MOVESELECT, temp_FEN_piece, temp_selected_square, move_square)
+
+            self.possible_moves.clear()
+            return GUIreturn(MenuControls.DONOTHING)
+        
+    """
+    def _handle_board_click_old(self, pos):
+        old version of board click handler, kept for reference while testing new version. Can be removed eventually.
         (x, y) = pos
         column = x // self.square_size
         row = y // self.square_size
@@ -316,6 +401,7 @@ class GUI:
 
             self.possible_moves.clear()
             return GUIreturn(MenuControls.DONOTHING)
+    """
 
     def _handle_menu_click(self, pos):
         """Handle clicks in the menu panel and return the selected menu action."""
@@ -328,6 +414,7 @@ class GUI:
         new_bot_game = self.new_bot_game_button.use_button(pos)
         if (new_game is not None) and (self.state is GUIStates.MENU):
             self.state = GUIStates.PIECE
+            self.black_is_disabled = False
             return new_game
         elif (resign is not None) and (self.state is not GUIStates.MENU):
             self.state = GUIStates.MENU
@@ -335,6 +422,7 @@ class GUI:
             
         elif (new_bot_game is not None) and (self.state is GUIStates.MENU):
             self.state = GUIStates.PIECE
+            self.black_is_disabled = True
             return new_bot_game
         else:
             return GUIreturn(MenuControls.DONOTHING)

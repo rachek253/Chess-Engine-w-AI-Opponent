@@ -40,7 +40,7 @@ def main():
             #should remove prints eventually, just here for testing purposes
             case MenuControls.NEWGAME:
                 gui.set_possible_moves([])
-                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")
 
                 print("New Game")
                 #TODO: Add new game code here
