@@ -99,7 +99,14 @@ class GameManager:
     def handle_piece_selection(self, coords: int):
         row = coords // 8
         col = coords % 8
-        moves = self.get_legal_moves((row, col))
+        tuple_moves = self.get_legal_moves([row, col])
+
+        moves = []
+
+        for move in tuple_moves:
+            int_move = move[0] * 8 + move[1]
+            moves.append(int_move)
+
         return moves
     
     def handle_move_selection(self, piece, from_coords: int, to_coords: int):
@@ -126,7 +133,7 @@ class GameManager:
     # ==========================
     # MOVE GENERATION
     # ==========================
-    def get_legal_moves(self, pos: Position):
+    def get_legal_moves(self, pos):
         board = self.get_board()
         r, c = pos
         piece = board[r][c]

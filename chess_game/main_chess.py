@@ -76,7 +76,7 @@ def main():
                 piece = result.piece # FEN name of piece selected
                 square = result.coords # 0-63 coordinates of piece selected
 
-                move_list = GM.get_legal_moves(square)
+                move_list = GM.handle_piece_selection(square)
 
                 gui.set_possible_moves(move_list)
 
