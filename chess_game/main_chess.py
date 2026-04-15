@@ -13,11 +13,13 @@ classes for the chess engine as we make files for them! - Rachel
 # insert main file code here
 import pygame
 from GUI.user_interface import GUI, GUIreturn, MenuControls
+from chess_logic.UpdatedGameManager import GameManager
 
 def main():
     gui = GUI()
     clock = pygame.time.Clock()
     running = True
+    GM = None
 
     while running:
         result = GUIreturn(MenuControls.DONOTHING) #default result, will be overwritten by event handling if an event is detected
@@ -39,14 +41,16 @@ def main():
         match type:
             #should remove prints eventually, just here for testing purposes
             case MenuControls.NEWGAME:
+                GM = GameManager("pvp")
                 gui.set_possible_moves([])
-                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1")
+                gui.update_board(GM.get_fen())
 
                 print("New Game")
                 #TODO: Add new game code here
             case MenuControls.NEWBOTGAME:
+                GM = GameManager("pvb")
                 gui.set_possible_moves([])
-                gui.update_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                gui.update_board(GM.get_fen())
 
                 print("New Bot Game")
                 #TODO: Add new bot game code here
@@ -72,7 +76,7 @@ def main():
                 piece = result.piece # FEN name of piece selected
                 square = result.coords # 0-63 coordinates of piece selected
 
-                move_list = [24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]
+                move_list = GM.get_legal_moves(square)
 
                 gui.set_possible_moves(move_list)
 

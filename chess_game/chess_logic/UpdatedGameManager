@@ -20,13 +20,19 @@ class GameManager:
 
     def new_game(self):
         self.fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        self.active_color = 'w'
+        self.castleling_rights = 'KQkq'
+        self.en_passant = '-'
+        self.halfmove_clock = 0
+        self.fullmove_number = 1
         self.game_over = False
 
     # ==========================
     # FEN ↔ BOARD
     # ==========================
     def fen_to_board(self):
-        rows = self.fen.split()[0].split('/')
+        fen_board, self.active_color, self.castleling_rights, self.en_passant, self.halfmove_clock, self.fullmove_number = self.fen.split()
+        rows = fen_board.split('/')
         board = []
 
         for row in rows:
@@ -59,16 +65,17 @@ class GameManager:
 
             fen_rows.append(fen_row)
 
-        parts = self.fen.split()
-        return f"{'/'.join(fen_rows)} {parts[1]} {parts[2]} {parts[3]} {parts[4]} {parts[5]}"
+        return f"{'/'.join(fen_rows)} {self.active_color} {self.castleling_rights} {self.en_passant} {self.halfmove_clock} {self.fullmove_number}"
 
     def get_turn(self):
-        return self.fen.split()[1]
+        return self.active_color
 
     def switch_turn(self):
-        parts = self.fen.split()
-        parts[1] = 'b' if parts[1] == 'w' else 'w'
-        self.fen = " ".join(parts)
+        if self.active_color == 'w':
+            self.active_color = 'b'
+        else:
+            self.active_color = 'w'
+            self.fullmove_number += 1
 
     def get_board(self):
         return self.fen_to_board()
@@ -88,6 +95,33 @@ class GameManager:
 
     def in_bounds(self, r, c):
         return 0 <= r < 8 and 0 <= c < 8
+    
+    def handle_piece_selection(self, coords: int):
+        row = coords // 8
+        col = coords % 8
+        moves = self.get_legal_moves((row, col))
+        return moves
+    
+    def handle_move_selection(self, piece, from_coords: int, to_coords: int):
+        from_row = from_coords // 8
+        from_col = from_coords % 8
+        to_row = to_coords // 8
+        to_col = to_coords % 8
+
+        if piece.tolower() == 'p':
+            self.halfmove_clock = 0
+        else:
+            self.halfmove_clock += 1
+
+        self.fullmove_number += 1
+        
+        #TODO: Add en passant handling
+
+        #TODO: Add castling handling
+
+        self.move((from_row, from_col), (to_row, to_col))
+
+        return self.get_fen()
 
     # ==========================
     # MOVE GENERATION
@@ -235,8 +269,8 @@ class GameManager:
 
         board[r1][c1] = ''
 
-        self.fen = self.board_to_fen(board)
         self.switch_turn()
+        self.fen = self.board_to_fen(board)
 
         if self.is_checkmate():
             self.game_over = True
