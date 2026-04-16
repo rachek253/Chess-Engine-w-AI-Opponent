@@ -144,19 +144,24 @@ class GameManager:
         def add_move(nr, nc):
             if not self.in_bounds(nr, nc): return False
             target = board[nr][nc]
-            if target == '' or not self.same_color(piece, target):
+            if target == '':
                 moves.append((nr, nc))
                 return True
+            if target != '' and not self.same_color(piece, target):
+                moves.append((nr, nc))
+                return False
             return False
 
 
         # PAWN
         if piece.lower() == 'p':
             direction = -1 if self.is_white(piece) else 1
+            first_move_legal = False
  
-            first_move_legal = add_move(r+direction, c)
+            if board[r+direction][c] == '':
+                first_move_legal = add_move(r+direction, c)
 
-            if ((self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1)) and first_move_legal:
+            if ((self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1)) and first_move_legal == True and board[r+2*direction][c] == '':
                 add_move(r+2*direction, c)
 
             for dc in [-1, 1]:

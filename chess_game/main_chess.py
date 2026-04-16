@@ -67,9 +67,8 @@ def main():
                 square_to = result.move # 0-63 coordinates of move selected
 
                 GM.handle_move_selection(piece, square_from, square_to)
-                gui.update_board(GM.get_fen())
-
                 gui.set_possible_moves([])
+                gui.update_board(GM.get_fen())
 
                 print("Move Select")
                 print(f"Piece: {piece}, From: {square_from}, To: {square_to}")
