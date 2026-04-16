@@ -80,7 +80,7 @@ class StockfishBot():
         return None
 
       # pick 1 move randomly from the top 5
-      move_str = random.choice(top_moves[:5])["move"]
+      move_str = random.choice(top_moves[:4])["move"]
       return move_str
 
     except Exception as e:
