@@ -161,6 +161,10 @@ class GameManager:
             if self.in_bounds(r+direction, c) and board[r+direction][c] == '':
                 moves.append((r+direction, c))
 
+            if (self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1):
+                if self.in_bounds(r+2*direction, c) and board[r+2*direction][c] == '' and board[r+direction][c] == '':
+                    moves.append((r+2*direction, c))
+
             for dc in [-1, 1]:
                 nr, nc = r+direction, c+dc
                 if self.in_bounds(nr, nc) and board[nr][nc] != '' and not self.same_color(piece, board[nr][nc]):
@@ -201,7 +205,30 @@ class GameManager:
 
         # QUEEN
         elif piece.lower() == 'q':
-            return self.get_legal_moves((r, c))  # simplified reuse
+            #Copied rook code
+            for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+                nr, nc = r, c
+                while True:
+                    nr += dr; nc += dc
+                    if not self.in_bounds(nr, nc): break
+                    if board[nr][nc] == '':
+                        moves.append((nr, nc))
+                    else:
+                        if not self.same_color(piece, board[nr][nc]):
+                            moves.append((nr, nc))
+                        break
+            #Copied bishop code
+            for dr, dc in [(-1,-1),(-1,1),(1,-1),(1,1)]:
+                nr, nc = r, c
+                while True:
+                    nr += dr; nc += dc
+                    if not self.in_bounds(nr, nc): break
+                    if board[nr][nc] == '':
+                        moves.append((nr, nc))
+                    else:
+                        if not self.same_color(piece, board[nr][nc]):
+                            moves.append((nr, nc))
+                        break
 
         # KING + CASTLING
         elif piece.lower() == 'k':
