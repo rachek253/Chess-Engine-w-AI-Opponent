@@ -12,7 +12,7 @@ classes for the chess engine as we make files for them! - Rachel
 """
 # insert main file code here
 import pygame
-from GUI.user_interface import GUI, GUIreturn, MenuControls
+from GUI.user_interface import GUI, GUIreturn, MenuControls, GUIStates
 from chess_logic.UpdatedGameManager import GameManager
 
 def main():
@@ -82,6 +82,8 @@ def main():
                 move_list = GM.handle_piece_selection(square)
 
                 gui.set_possible_moves(move_list)
+                if not move_list:
+                    gui.set_state(GUIStates.PIECE)
 
                 print("Piece Select")
                 print(f"Piece: {piece}, Square: {square}")

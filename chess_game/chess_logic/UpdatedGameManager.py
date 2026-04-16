@@ -101,7 +101,7 @@ class GameManager:
     def handle_piece_selection(self, coords: int):
         row = coords // 8
         col = coords % 8
-        tuple_moves = self.get_legal_moves([row, col])
+        tuple_moves = self.get_legal_moves([row, col], self.get_turn())
 
         moves = []
 
@@ -126,7 +126,7 @@ class GameManager:
     # ==========================
     # MOVE GENERATION
     # ==========================
-    def get_legal_moves(self, pos):
+    def get_legal_moves(self, pos, turn):
         board = self.get_board()
         r, c = pos
         piece = board[r][c]
@@ -134,16 +134,19 @@ class GameManager:
         if piece == '':
             return []
 
-        turn = self.get_turn()
         if (turn == 'w' and not self.is_white(piece)) or \
            (turn == 'b' and not self.is_black(piece)):
             return []
 
         moves = []
 
-        def add_move(nr, nc):
+        def add_move(r, c, nr, nc):
             if not self.in_bounds(nr, nc): return False
             target = board[nr][nc]
+            potential_board = [row.copy() for row in board]
+            potential_board[nr][nc] = piece
+            potential_board[r][c] = ''
+            if self.is_in_check(potential_board, self.get_turn()): return False
             if target == '':
                 moves.append((nr, nc))
                 return True
@@ -159,15 +162,15 @@ class GameManager:
             first_move_legal = False
  
             if board[r+direction][c] == '':
-                first_move_legal = add_move(r+direction, c)
+                first_move_legal = add_move(r, c, r+direction, c)
 
             if ((self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1)) and first_move_legal == True and board[r+2*direction][c] == '':
-                add_move(r+2*direction, c)
+                add_move(r, c, r+2*direction, c)
 
             for dc in [-1, 1]:
                 nr, nc = r+direction, c+dc
                 if self.in_bounds(nr, nc) and board[nr][nc] != '' and not self.same_color(piece, board[nr][nc]):
-                    add_move(nr, nc)
+                    add_move(r, c, nr, nc)
 
         # ROOK
         elif piece.lower() == 'r':
@@ -177,12 +180,12 @@ class GameManager:
                 while legal_move_returned:
                     nr += dr; nc += dc
                     if not self.in_bounds(nr, nc): legal_move_returned = False
-                    legal_move_returned = add_move(nr, nc)
+                    legal_move_returned = add_move(r, c, nr, nc)
 
         # KNIGHT
         elif piece.lower() == 'n':
             for dr, dc in [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]:
-                add_move(r+dr, c+dc)
+                add_move(r, c, r+dr, c+dc)
 
         # BISHOP
         elif piece.lower() == 'b':
@@ -192,7 +195,7 @@ class GameManager:
                 while legal_move_returned:
                     nr += dr; nc += dc
                     if not self.in_bounds(nr, nc): legal_move_returned = False
-                    legal_move_returned = add_move(nr, nc)
+                    legal_move_returned = add_move(r, c, nr, nc)
 
         # QUEEN
         elif piece.lower() == 'q':
@@ -202,54 +205,106 @@ class GameManager:
                 while legal_move_returned:
                     nr += dr; nc += dc
                     if not self.in_bounds(nr, nc): legal_move_returned = False
-                    legal_move_returned = add_move(nr, nc)
+                    legal_move_returned = add_move(r, c, nr, nc)
 
         # KING + CASTLING
         elif piece.lower() == 'k':
             for dr, dc in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
-                add_move(r+dr, c+dc)
+                add_move(r, c, r+dr, c+dc)
 
             # Castling TODO: add check for castling across check
             if piece == 'K' and 'K' in self.castleling_rights and board[7][5] == '' and board[7][6] == '':
-                add_move(7,6)
+                add_move(r, c, 7, 6)
             if piece == 'K' and 'Q' in self.castleling_rights and board[7][3] == '' and board[7][2] == '' and board[7][1] == '':
-                add_move(7,2)
+                add_move(r, c, 7, 2)
             if piece == 'k' and 'k' in self.castleling_rights and board[0][5] == '' and board[0][6] == '':
-                add_move(0,6)
+                add_move(r, c, 0, 6)
             if piece == 'k' and 'q' in self.castleling_rights and board[0][3] == '' and board[0][2] == '' and board[0][1] == '':
-                add_move(0,2)
+                add_move(r, c, 0, 2)
 
         return moves
 
     # ==========================
     # CHECK / CHECKMATE
     # ==========================
-    def is_in_check(self, color):
-        board = self.get_board()
+
+    def square_under_attack(self, board, square, active_color):
+        r, c = square
+        opponent_color = 'b' if active_color == 'w' else 'w'
+
+        #check knight attacks
+        for dr, dc in [(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)]:
+            nr, nc = r+dr, c+dc
+            if self.in_bounds(nr, nc):
+                piece = board[nr][nc]
+                if piece.lower() == 'n' and ((opponent_color == 'w' and self.is_white(piece)) or (opponent_color == 'b' and self.is_black(piece))):
+                    return True
+                
+        #check pawn attacks
+        direction = -1 if opponent_color == 'w' else 1
+        for dc in [-1, 1]:
+            nr, nc = r+direction, c+dc
+            if self.in_bounds(nr, nc):
+                piece = board[nr][nc]
+                if piece.lower() == 'p' and ((opponent_color == 'w' and self.is_white(piece)) or (opponent_color == 'b' and self.is_black(piece))):
+                    return True
+        
+        #check rook/queen horizontal attacks
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            nr, nc = r, c
+            legal_move_returned = True
+            while legal_move_returned:
+                nr += dr; nc += dc
+                if not self.in_bounds(nr, nc): legal_move_returned = False
+                else:
+                    piece = board[nr][nc]
+                    if piece != '':
+                        if piece.lower() in ['r', 'q'] and ((opponent_color == 'w' and self.is_white(piece)) or (opponent_color == 'b' and self.is_black(piece))):
+                            return True
+                        legal_move_returned = False
+
+        #check bishop/queen diagonal attacks
+        for dr, dc in [(-1,-1),(-1,1),(1,-1),(1,1)]:
+            nr, nc = r, c
+            legal_move_returned = True
+            while legal_move_returned:
+                nr += dr; nc += dc
+                if not self.in_bounds(nr, nc): legal_move_returned = False
+                else:
+                    piece = board[nr][nc]
+                    if piece != '':
+                        if piece.lower() in ['b', 'q'] and ((opponent_color == 'w' and self.is_white(piece)) or (opponent_color == 'b' and self.is_black(piece))):
+                            return True
+                        legal_move_returned = False
+
+        #check king attacks
+        for dr, dc in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
+            nr, nc = r+dr, c+dc
+            if self.in_bounds(nr, nc):
+                piece = board[nr][nc]
+                if piece.lower() == 'k' and ((opponent_color == 'w' and self.is_white(piece)) or (opponent_color == 'b' and self.is_black(piece))):
+                    return True
+                
+        return False
+    
+    def is_in_check(self, board, color):
         king = 'K' if color == 'w' else 'k'
 
-        king_pos = None
-        for r in range(8):
-            for c in range(8):
-                if board[r][c] == king:
-                    king_pos = (r, c)
+        for r, c in [(r,c) for r in range(8) for c in range(8)]:
+            if board[r][c] == king:
+                return self.square_under_attack(board, (r,c), color)
 
-        for r in range(8):
-            for c in range(8):
-                piece = board[r][c]
-                if piece != '' and ((color == 'w' and self.is_black(piece)) or (color == 'b' and self.is_white(piece))):
-                    if king_pos in self.get_legal_moves((r,c)):
-                        return True
-
-        return False
-
-    def is_checkmate(self):
-        turn = self.get_turn()
-        for r in range(8):
-            for c in range(8):
-                if self.get_legal_moves((r,c)):
+    def is_in_checkmate(self, color):
+        if not self.is_in_check(self.get_board(), color):
+            return False
+        for r, c in [(r,c) for r in range(8) for c in range(8)]:
+            piece = self.get_board()[r][c]
+            if (piece != '') and ((color == 'w' and self.is_white(piece)) or (color == 'b' and self.is_black(piece))):
+                moves = self.get_legal_moves((r,c), color)
+                if moves:
                     return False
-        return self.is_in_check(turn)
+        return True
+
 
     # ==========================
     # MOVE EXECUTION
@@ -258,7 +313,7 @@ class GameManager:
         if self.game_over:
             return False
 
-        if end not in self.get_legal_moves(start):
+        if end not in self.get_legal_moves(start, self.get_turn()):
             return False
 
         board = self.get_board()
@@ -324,7 +379,7 @@ class GameManager:
         self.switch_turn()
         self.fen = self.board_to_fen(board)
 
-        if self.is_checkmate():
+        if self.is_in_checkmate(self.get_turn()):
             self.game_over = True
 
         # BOT MOVE
