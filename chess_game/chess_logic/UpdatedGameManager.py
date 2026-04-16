@@ -149,40 +149,37 @@ class GameManager:
         moves = []
 
         def add_move(nr, nc):
-            if not self.in_bounds(nr, nc): return
+            if not self.in_bounds(nr, nc): return False
             target = board[nr][nc]
             if target == '' or not self.same_color(piece, target):
                 moves.append((nr, nc))
+                return True
+            return False
+
 
         # PAWN
         if piece.lower() == 'p':
             direction = -1 if self.is_white(piece) else 1
-
-            if self.in_bounds(r+direction, c) and board[r+direction][c] == '':
-                add_move(r+direction, c)
+ 
+            add_move(r+direction, c)
 
             if (self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1):
-                if self.in_bounds(r+2*direction, c) and board[r+2*direction][c] == '' and board[r+direction][c] == '':
-                    add_move(r+2*direction, c)
+                add_move(r+2*direction, c)
 
             for dc in [-1, 1]:
                 nr, nc = r+direction, c+dc
-                if self.in_bounds(nr, nc) and board[nr][nc] != '' and not self.same_color(piece, board[nr][nc]):
+                if board[nr][nc] != '':
                     add_move(nr, nc)
 
         # ROOK
         elif piece.lower() == 'r':
             for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
                 nr, nc = r, c
-                while True:
+                legal_move_returned = True
+                while legal_move_returned:
                     nr += dr; nc += dc
-                    if not self.in_bounds(nr, nc): break
-                    if board[nr][nc] == '':
-                        add_move(nr, nc)
-                    else:
-                        if not self.same_color(piece, board[nr][nc]):
-                            add_move(nr, nc)
-                        break
+                    if not self.in_bounds(nr, nc): legal_move_returned = False
+                    legal_move_returned = add_move(nr, nc)
 
         # KNIGHT
         elif piece.lower() == 'n':
@@ -193,42 +190,21 @@ class GameManager:
         elif piece.lower() == 'b':
             for dr, dc in [(-1,-1),(-1,1),(1,-1),(1,1)]:
                 nr, nc = r, c
-                while True:
+                legal_move_returned = True
+                while legal_move_returned:
                     nr += dr; nc += dc
-                    if not self.in_bounds(nr, nc): break
-                    if board[nr][nc] == '':
-                        add_move(nr, nc)
-                    else:
-                        if not self.same_color(piece, board[nr][nc]):
-                            add_move(nr, nc)
-                        break
+                    if not self.in_bounds(nr, nc): legal_move_returned = False
+                    legal_move_returned = add_move(nr, nc)
 
         # QUEEN
         elif piece.lower() == 'q':
-            #Copied rook code
-            for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+            for dr, dc in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
                 nr, nc = r, c
-                while True:
+                legal_move_returned = True
+                while legal_move_returned:
                     nr += dr; nc += dc
-                    if not self.in_bounds(nr, nc): break
-                    if board[nr][nc] == '':
-                        add_move(nr, nc)
-                    else:
-                        if not self.same_color(piece, board[nr][nc]):
-                            add_move(nr, nc)
-                        break
-            #Copied bishop code
-            for dr, dc in [(-1,-1),(-1,1),(1,-1),(1,1)]:
-                nr, nc = r, c
-                while True:
-                    nr += dr; nc += dc
-                    if not self.in_bounds(nr, nc): break
-                    if board[nr][nc] == '':
-                        add_move(nr, nc)
-                    else:
-                        if not self.same_color(piece, board[nr][nc]):
-                            add_move(nr, nc)
-                        break
+                    if not self.in_bounds(nr, nc): legal_move_returned = False
+                    legal_move_returned = add_move(nr, nc)
 
         # KING + CASTLING
         elif piece.lower() == 'k':
