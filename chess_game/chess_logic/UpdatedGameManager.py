@@ -31,7 +31,9 @@ class GameManager:
     # FEN ↔ BOARD
     # ==========================
     def fen_to_board(self):
-        fen_board, self.active_color, self.castleling_rights, self.en_passant, self.halfmove_clock, self.fullmove_number = self.fen.split()
+        fen_board, self.active_color, self.castleling_rights, self.en_passant, halfmove_clock, fullmove_number = self.fen.split()
+        self.halfmove_clock = int(halfmove_clock)
+        self.fullmove_number = int(fullmove_number)
         rows = fen_board.split('/')
         board = []
 
@@ -152,14 +154,14 @@ class GameManager:
         if piece.lower() == 'p':
             direction = -1 if self.is_white(piece) else 1
  
-            add_move(r+direction, c)
+            first_move_legal = add_move(r+direction, c)
 
-            if (self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1):
+            if ((self.is_white(piece) and r == 6) or (self.is_black(piece) and r == 1)) and first_move_legal:
                 add_move(r+2*direction, c)
 
             for dc in [-1, 1]:
                 nr, nc = r+direction, c+dc
-                if board[nr][nc] != '':
+                if self.in_bounds(nr, nc) and board[nr][nc] != '' and not self.same_color(piece, board[nr][nc]):
                     add_move(nr, nc)
 
         # ROOK
@@ -202,7 +204,7 @@ class GameManager:
             for dr, dc in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]:
                 add_move(r+dr, c+dc)
 
-            # Castling (basic)
+            # Castling TODO: add check for castling across check
             if piece == 'K' and 'K' in self.castleling_rights and board[7][5] == '' and board[7][6] == '':
                 add_move(7,6)
             if piece == 'K' and 'Q' in self.castleling_rights and board[7][3] == '' and board[7][2] == '' and board[7][1] == '':
@@ -291,9 +293,23 @@ class GameManager:
             castleling_rights = self.castleling_rights.replace('k', '').replace('q', '')
             self.castleling_rights = castleling_rights if castleling_rights else '-'
 
+        #make rook move if castling
+        if piece == 'K' and r1 == 7 and c1 == 4 and r2 == 7 and c2 == 6:
+            board[7][5] = 'R'
+            board[7][7] = ''
+        if piece == 'K' and r1 == 7 and c1 == 4 and r2 == 7 and c2 == 2:
+            board[7][3] = 'R'
+            board[7][0] = ''
+        if piece == 'k' and r1 == 0 and c1 == 4 and r2 == 0 and c2 == 6:
+            board[0][5] = 'r'
+            board[0][7] = ''
+        if piece == 'k' and r1 == 0 and c1 == 4 and r2 == 0 and c2 == 2:
+            board[0][3] = 'r'
+            board[0][0] = ''
+
         #TODO: Add en passant handling
 
-        if piece.tolower() == 'p':
+        if piece.lower() == 'p':
             self.halfmove_clock = 0
         else:
             self.halfmove_clock += 1

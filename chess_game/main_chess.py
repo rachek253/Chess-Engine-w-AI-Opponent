@@ -66,10 +66,14 @@ def main():
                 square_from = result.coords # 0-63 coordinates of piece selected
                 square_to = result.move # 0-63 coordinates of move selected
 
+                GM.handle_move_selection(piece, square_from, square_to)
+                gui.update_board(GM.get_fen())
+
                 gui.set_possible_moves([])
 
                 print("Move Select")
                 print(f"Piece: {piece}, From: {square_from}, To: {square_to}")
+                print(f"FEN after move: {GM.get_fen()}")
                 #TODO: Add move select code here
             case MenuControls.PIECESELECT:
                 #feel free to rename the left hand side variables
