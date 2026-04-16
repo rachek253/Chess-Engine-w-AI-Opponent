@@ -212,13 +212,13 @@ class GameManager:
                 add_move(r+dr, c+dc)
 
             # Castling (basic)
-            if piece == 'K' and 'K' in self.fen:
+            if piece == 'K' and 'K' in self.castleling_rights and board[7][5] == '' and board[7][6] == '':
                 add_move(7,6)
-            if piece == 'K' and 'Q' in self.fen:
+            if piece == 'K' and 'Q' in self.castleling_rights and board[7][3] == '' and board[7][2] == '' and board[7][1] == '':
                 add_move(7,2)
-            if piece == 'k' and 'k' in self.fen:
+            if piece == 'k' and 'k' in self.castleling_rights and board[0][5] == '' and board[0][6] == '':
                 add_move(0,6)
-            if piece == 'k' and 'q' in self.fen:
+            if piece == 'k' and 'q' in self.castleling_rights and board[0][3] == '' and board[0][2] == '' and board[0][1] == '':
                 add_move(0,2)
 
         return moves
@@ -278,6 +278,29 @@ class GameManager:
             board[r2][c2] = piece
 
         board[r1][c1] = ''
+
+        #updating castling rights
+        if piece == 'R' and r1 == 7 and c1 == 0:
+            castleling_rights = self.castleling_rights.replace('Q', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+        if piece == 'r' and r1 == 0 and c1 == 0:
+            castleling_rights = self.castleling_rights.replace('q', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+        if piece == 'R' and r1 == 7 and c1 == 7:
+            castleling_rights = self.castleling_rights.replace('K', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+        if piece == 'r' and r1 == 0 and c1 == 7:
+            castleling_rights = self.castleling_rights.replace('k', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+
+        if piece == 'K' and r1 == 7 and c1 == 4:
+            castleling_rights = self.castleling_rights.replace('K', '').replace('Q', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+        if piece == 'k' and r1 == 0 and c1 == 4:
+            castleling_rights = self.castleling_rights.replace('k', '').replace('q', '')
+            self.castleling_rights = castleling_rights if castleling_rights else '-'
+
+        #TODO: Add en passant handling
 
         self.switch_turn()
         self.fen = self.board_to_fen(board)
