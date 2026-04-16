@@ -114,17 +114,8 @@ class GameManager:
         from_col = from_coords % 8
         to_row = to_coords // 8
         to_col = to_coords % 8
-
-        if piece.tolower() == 'p':
-            self.halfmove_clock = 0
-        else:
-            self.halfmove_clock += 1
-
-        self.fullmove_number += 1
         
         #TODO: Add en passant handling
-
-        #TODO: Add castling handling
 
         self.move((from_row, from_col), (to_row, to_col))
 
@@ -301,6 +292,13 @@ class GameManager:
             self.castleling_rights = castleling_rights if castleling_rights else '-'
 
         #TODO: Add en passant handling
+
+        if piece.tolower() == 'p':
+            self.halfmove_clock = 0
+        else:
+            self.halfmove_clock += 1
+
+        self.fullmove_number += 1
 
         self.switch_turn()
         self.fen = self.board_to_fen(board)
