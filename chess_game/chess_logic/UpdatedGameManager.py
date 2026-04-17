@@ -144,12 +144,12 @@ class GameManager:
             potential_board = [row.copy() for row in board]
             potential_board[nr][nc] = piece
             potential_board[r][c] = ''
-            if self.is_in_check(potential_board, self.get_turn()): return False
+            in_check = self.is_in_check(potential_board, self.get_turn())
             if target == '':
-                moves.append((nr, nc))
+                if not in_check: moves.append((nr, nc))
                 return True
             if target != '' and not self.same_color(piece, target):
-                moves.append((nr, nc))
+                if not in_check: moves.append((nr, nc))
                 return False
             return False
 
@@ -248,7 +248,7 @@ class GameManager:
                     return True
                 
         #check pawn attacks
-        direction = -1 if opponent_color == 'w' else 1
+        direction = 1 if opponent_color == 'w' else -1
         for dc in [-1, 1]:
             nr, nc = r+direction, c+dc
             if self.in_bounds(nr, nc):
