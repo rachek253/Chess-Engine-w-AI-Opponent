@@ -153,7 +153,6 @@ class GameManager:
                 return False
             return False
 
-
         # PAWN
         if piece.lower() == 'p':
             direction = -1 if self.is_white(piece) else 1
@@ -220,14 +219,15 @@ class GameManager:
                 add_move(r, c, r+dr, c+dc)
 
             # Castling TODO: add check for castling across check
-            if piece == 'K' and 'K' in self.castleling_rights and board[7][5] == '' and board[7][6] == '':
-                add_move(r, c, 7, 6)
-            if piece == 'K' and 'Q' in self.castleling_rights and board[7][3] == '' and board[7][2] == '' and board[7][1] == '':
-                add_move(r, c, 7, 2)
-            if piece == 'k' and 'k' in self.castleling_rights and board[0][5] == '' and board[0][6] == '':
-                add_move(r, c, 0, 6)
-            if piece == 'k' and 'q' in self.castleling_rights and board[0][3] == '' and board[0][2] == '' and board[0][1] == '':
-                add_move(r, c, 0, 2)
+            if not self.is_in_check(board, self.active_color):
+                if piece == 'K' and 'K' in self.castleling_rights and board[7][5] == '' and board[7][6] == '' and not self.square_under_attack(board, (7,5),"w"):
+                    add_move(r, c, 7, 6)
+                if piece == 'K' and 'Q' in self.castleling_rights and board[7][3] == '' and board[7][2] == '' and board[7][1] == '' and not self.square_under_attack(board, (7,3),"w"):
+                    add_move(r, c, 7, 2)
+                if piece == 'k' and 'k' in self.castleling_rights and board[0][5] == '' and board[0][6] == '' and not self.square_under_attack(board, (0,5),"b"):
+                    add_move(r, c, 0, 6)
+                if piece == 'k' and 'q' in self.castleling_rights and board[0][3] == '' and board[0][2] == '' and board[0][1] == '' and not self.square_under_attack(board, (0,3),"b"):
+                    add_move(r, c, 0, 2)
 
         return moves
 
