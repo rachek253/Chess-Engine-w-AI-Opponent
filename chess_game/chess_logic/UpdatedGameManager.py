@@ -116,8 +116,6 @@ class GameManager:
         from_col = from_coords % 8
         to_row = to_coords // 8
         to_col = to_coords % 8
-        
-        #TODO: Add en passant handling
 
         self.move((from_row, from_col), (to_row, to_col))
 
@@ -160,6 +158,15 @@ class GameManager:
         if piece.lower() == 'p':
             direction = -1 if self.is_white(piece) else 1
             first_move_legal = False
+
+            if self.en_passant != "-":
+                file = self.en_passant[0]
+                rank = self.en_passant[1]
+                ep_c = ord(file) - ord('a')
+                ep_r = 8 - int(rank)
+            else:
+                ep_c = None
+                ep_r = None
  
             if board[r+direction][c] == '':
                 first_move_legal = add_move(r, c, r+direction, c)
@@ -169,7 +176,7 @@ class GameManager:
 
             for dc in [-1, 1]:
                 nr, nc = r+direction, c+dc
-                if self.in_bounds(nr, nc) and board[nr][nc] != '' and not self.same_color(piece, board[nr][nc]):
+                if self.in_bounds(nr, nc) and (board[nr][nc] != '' and not self.same_color(piece, board[nr][nc])) or (nr == ep_r and nc == ep_c):
                     add_move(r, c, nr, nc)
 
         # ROOK
@@ -367,7 +374,64 @@ class GameManager:
             board[0][3] = 'r'
             board[0][0] = ''
 
-        #TODO: Add en passant handling
+        #en passant handling
+        if self.en_passant != "-":
+            file = self.en_passant[0]
+            rank = self.en_passant[1]
+            ep_c = ord(file) - ord('a')
+            ep_r = 8 - int(rank)
+        else:
+            ep_c = None
+            ep_r = None
+
+        if ep_c == c2 and ep_r == r2:
+            if self.is_white(piece):
+                board[r2+1][c2] = ''
+            else:
+                board[r2-1][c2] = ''
+
+        self.en_passant = "-"
+        if piece == 'p' and r1 == 1 and r2 == 3:
+            match c2:
+                case 0:
+                    self.en_passant = "a6"
+                case 1:
+                    self.en_passant = "b6"
+                case 2:
+                    self.en_passant = "c6"
+                case 3:
+                    self.en_passant = "d6"
+                case 4:
+                    self.en_passant = "e6"
+                case 5:
+                    self.en_passant = "f6"
+                case 6:
+                    self.en_passant = "g6"
+                case 7:
+                    self.en_passant = "h6"
+                case _:
+                    self.en_passant = "-"
+
+        if piece == "P" and r1 == 6 and r2 == 4:
+            match c2:
+                case 0:
+                    self.en_passant = "a3"
+                case 1:
+                    self.en_passant = "b3"
+                case 2:
+                    self.en_passant = "c3"
+                case 3:
+                    self.en_passant = "d3"
+                case 4:
+                    self.en_passant = "e3"
+                case 5:
+                    self.en_passant = "f3"
+                case 6:
+                    self.en_passant = "g3"
+                case 7:
+                    self.en_passant = "h3"
+                case _:
+                    self.en_passant = "-"
 
         if piece.lower() == 'p':
             self.halfmove_clock = 0
