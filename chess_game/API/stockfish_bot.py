@@ -42,6 +42,19 @@ class StockfishBot():
     self.movetime = 100
     self.skill_level = 0
     self.multiPV = 4
+
+  def is_online(self): 
+    """
+    Checks if the chess engine API is reachable. 
+    Returns a bool value, true if success, false else 
+    """
+    
+    try: 
+      ws = create_connection(self.ws_url, timeout=self.timeout) 
+      ws.close() 
+      return True
+    except Exception: 
+      return False
   
   def choose_moves(self, board):
     """
