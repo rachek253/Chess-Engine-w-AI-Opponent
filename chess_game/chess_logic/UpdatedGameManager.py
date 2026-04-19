@@ -6,6 +6,7 @@ from typing import List, Tuple
 from enum import Enum
 import requests
 import os
+from stockfish_bot import StockfishBot
 
 Position = Tuple[int, int]
 
@@ -24,6 +25,7 @@ class GameManager:
         """
         self.mode = mode
         self.api_key = os.getenv("STOCKFISH_API_KEY")
+        self.bot = StockfishBot() if mode == "pvb" else None
         self.game_state = GameState.ONGOING
         self.new_game()
 
@@ -518,19 +520,18 @@ class GameManager:
     # STOCKFISH CONNECTION
     # ==========================
     def bot_move(self):
+        if not self.bot: 
+            return
         try:
-            response = requests.post(
-                "https://stockfish.online/api/s/v2.php",
-                params={"fen": self.fen, "depth": 10},
-            )
+            move_str = self.bot.choose_moves(self.fen)
 
-            data = response.json()
-            move = data["bestmove"].split()[1]
+            if not move_str: 
+                return
 
-            start = (8 - int(move[1]), ord(move[0]) - 97)
-            end = (8 - int(move[3]), ord(move[2]) - 97)
+            start = (8 - int(move_str[1]), ord(move_str[0]) - 97)
+            end = (8 - int(move_str[3]), ord(move_str[2]) - 97)
 
             self.move(start, end)
 
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[GameManager Bot Error] {e}")
