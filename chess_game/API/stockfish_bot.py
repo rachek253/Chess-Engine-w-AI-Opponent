@@ -6,8 +6,6 @@ Author(s): Rachel Newman, Cody Rubendall
 Purpose: A module to connect to the external chess engine using WebSocket communication and
 requests a move for the AI opponent. 
 
-Note to Cody: I just started this file to connect the API so you can write the code for the bot 
-moves! -Rachel (delete when seen please)
 """
 
 import json
