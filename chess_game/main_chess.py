@@ -13,7 +13,7 @@ classes for the chess engine as we make files for them! - Rachel
 # insert main file code here
 import pygame
 from GUI.user_interface import GUI, GUIreturn, MenuControls, GUIStates
-from chess_logic.UpdatedGameManager import GameManager
+from chess_logic.UpdatedGameManager import GameManager, GameState
 
 def main():
     gui = GUI()
@@ -23,6 +23,32 @@ def main():
 
     while running:
         result = GUIreturn(MenuControls.DONOTHING) #default result, will be overwritten by event handling if an event is detected
+
+        state = GM.get_status() if GM else None
+        match state:
+            case GameState.WHITEWINS:
+                gui.set_state(GUIStates.MENU)
+                gui.set_message("White Wins!")
+                pass
+            case GameState.BLACKWINS:
+                gui.set_state(GUIStates.MENU)
+                gui.set_message("Black Wins!")
+                pass
+            case GameState.STALEMATE:
+                gui.set_state(GUIStates.MENU)
+                gui.set_message("Stalemate!")
+                pass
+            case GameState.WHITEPROMO:
+                gui.set_state(GUIStates.WHITEPROMO)
+                gui.set_message("White Promotion")
+                pass
+            case GameState.BLACKPROMO:
+                gui.set_state(GUIStates.BLACKPROMO)
+                gui.set_message("Black Promotion")
+                pass
+            case _:
+                pass
+
         #GUI EVENT HANDLING
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -56,7 +82,7 @@ def main():
                 #TODO: Add new bot game code here
             case MenuControls.RESIGN:
                 gui.set_possible_moves([])
-                gui.update_board("8/8/8/4k3/3K4/8/8/8 w - - 0 0")
+                GM.resign()
 
                 print("Resign")
                 #TODO: Add resign code here
@@ -88,6 +114,18 @@ def main():
                 print("Piece Select")
                 print(f"Piece: {piece}, Square: {square}")
                 #TODO: Add piece select code here
+            case MenuControls.PROMOTION:
+                #feel free to rename the left hand side variables
+                piece = result.piece # FEN name of piece selected for promotion
+
+                GM.promote(piece)
+                gui.set_possible_moves([])
+                gui.update_board(GM.get_fen())
+                gui.set_state(GUIStates.PIECE)
+
+                print("Promotion")
+                print(f"Piece: {piece}")
+                print(f"FEN after promotion: {GM.get_fen()}")
             case MenuControls.DONOTHING:
                 #idk if theres anything we need to do here, this is just the
                 #do nothing case which mostly is a safety net in my gui code

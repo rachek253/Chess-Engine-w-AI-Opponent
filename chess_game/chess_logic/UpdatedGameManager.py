@@ -3,11 +3,19 @@
 # ==============================
 
 from typing import List, Tuple
+from enum import Enum
 import requests
 import os
 
 Position = Tuple[int, int]
 
+class GameState(Enum):
+    ONGOING = 1
+    STALEMATE = 2
+    BLACKWINS = 3
+    WHITEWINS = 4
+    BLACKPROMO = 5
+    WHITEPROMO = 6
 
 class GameManager:
     def __init__(self, mode="pvp"):
@@ -16,6 +24,7 @@ class GameManager:
         """
         self.mode = mode
         self.api_key = os.getenv("STOCKFISH_API_KEY")
+        self.game_state = GameState.ONGOING
         self.new_game()
 
     def new_game(self):
@@ -120,6 +129,37 @@ class GameManager:
         self.move((from_row, from_col), (to_row, to_col))
 
         return self.get_fen()
+    
+    def get_status(self):
+        self.is_in_checkmate(self.get_turn())
+        self.is_in_stalemate()
+
+        return self.game_state
+    
+    def resign(self):
+        if self.active_color == 'w':
+            self.game_state = GameState.BLACKWINS
+        elif self.active_color == 'b':
+            self.game_state = GameState.WHITEWINS
+        self.game_over = True
+
+    def promote(self, piece):
+        if self.game_state == GameState.WHITEPROMO and piece in ['q', 'r', 'b', 'n']:
+            board = self.get_board()
+            for c in range(8):
+                if board[0][c] == 'P':
+                    board[0][c] = piece.upper()
+            self.switch_turn()
+            self.fen = self.board_to_fen(board)
+            self.game_state = GameState.ONGOING
+        elif self.game_state == GameState.BLACKPROMO and piece in ['q', 'r', 'b', 'n']:
+            board = self.get_board()
+            for c in range(8):
+                if board[7][c] == 'p':
+                    board[7][c] = piece.lower()
+            self.switch_turn()
+            self.fen = self.board_to_fen(board)
+            self.game_state = GameState.ONGOING
 
     # ==========================
     # MOVE GENERATION
@@ -310,6 +350,28 @@ class GameManager:
                 moves = self.get_legal_moves((r,c), color)
                 if moves:
                     return False
+        if self.active_color == 'w':
+            self.game_state = GameState.BLACKWINS
+        elif self.active_color == 'b':
+            self.game_state = GameState.WHITEWINS
+        self.game_over = True
+        return True
+    
+    def is_in_stalemate(self):
+        if self.is_in_check(self.get_board(), self.active_color):
+            return False
+        if self.halfmove_clock >= 100:
+            self.game_state = GameState.STALEMATE
+            self.game_over = True
+            return True
+        for r, c in [(r,c) for r in range(8) for c in range(8)]:
+            piece = self.get_board()[r][c]
+            if (piece != '') and ((self.active_color == 'w' and self.is_white(piece)) or (self.active_color == 'b' and self.is_black(piece))):
+                moves = self.get_legal_moves((r,c), self.active_color)
+                if moves:
+                    return False
+        self.game_state = GameState.STALEMATE
+        self.game_over = True
         return True
 
 
@@ -331,12 +393,11 @@ class GameManager:
 
         # Promotion
         if piece == 'P' and r2 == 0:
-            board[r2][c2] = 'Q'
+            self.game_state = GameState.WHITEPROMO
         elif piece == 'p' and r2 == 7:
-            board[r2][c2] = 'q'
-        else:
-            board[r2][c2] = piece
-
+            self.game_state = GameState.BLACKPROMO
+        
+        board[r2][c2] = piece
         board[r1][c1] = ''
 
         #updating castling rights
@@ -433,22 +494,23 @@ class GameManager:
                 case _:
                     self.en_passant = "-"
 
-        if piece.lower() == 'p':
-            self.halfmove_clock = 0
+        if self.game_state == GameState.ONGOING:
+            if piece.lower() == 'p' or self.is_in_check(board, 'w' if self.active_color == 'b' else 'b'):
+                self.halfmove_clock = 0
+            else:
+                self.halfmove_clock += 1
+
+            self.switch_turn()
+            self.fen = self.board_to_fen(board)
+
+            if self.is_in_checkmate(self.get_turn()):
+                self.game_over = True
+
+            # BOT MOVE
+            if self.mode == "pvb" and not self.game_over and self.get_turn() == 'b':
+                self.bot_move()
         else:
-            self.halfmove_clock += 1
-
-        self.fullmove_number += 1
-
-        self.switch_turn()
-        self.fen = self.board_to_fen(board)
-
-        if self.is_in_checkmate(self.get_turn()):
-            self.game_over = True
-
-        # BOT MOVE
-        if self.mode == "pvb" and not self.game_over and self.get_turn() == 'b':
-            self.bot_move()
+            self.fen = self.board_to_fen(board)
 
         return True
 

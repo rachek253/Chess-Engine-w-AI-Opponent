@@ -20,6 +20,8 @@ class GUIStates(Enum):
     MENU = 1
     PIECE = 2
     MOVE = 3
+    WHITEPROMO = 4
+    BLACKPROMO = 5
 
 class MenuControls(Enum):
     NEWGAME = 1
@@ -28,6 +30,7 @@ class MenuControls(Enum):
     MOVESELECT = 4
     DONOTHING = 5
     NEWBOTGAME = 6
+    PROMOTION = 7
 
 class GUIreturn:
     """Container for a GUI action result sent back to the game controller."""
@@ -139,6 +142,7 @@ class GUI:
 
         self.possible_moves = []
         self.active_color = 'w'
+        self.message = None
 
     def draw_all(self):
         """Render the board, pieces, and legal-move indicators every frame."""
@@ -191,6 +195,13 @@ class GUI:
         # Extract only the board layout portion from the full FEN string.
         board_part = fen.split()[0]
         self.active_color = fen.split()[1]
+        if self.active_color == 'b':
+            self.message = "Black to Move"
+        elif self.active_color == 'w':
+            self.message = "White to Move"
+        else:
+            self.message = None
+
         rows = board_part.split("/")
 
         if len(rows) != 8:
@@ -222,6 +233,10 @@ class GUI:
         """Set the current GUI state (MENU, PIECE, or MOVE)."""
         self.state = new_state
 
+    def set_message(self, message:str):
+        """Set a message to be displayed in the menu area (e.g. for check/checkmate)."""
+        self.message = message
+
     def _draw_board(self):
         """Draw the chess board background at the origin of the window."""
         self.screen.blit(self.board_img, (0, 0))
@@ -251,18 +266,31 @@ class GUI:
         if self.state == GUIStates.MENU:
             self.new_game_button.draw_button(self.screen, self.font)
             self.new_bot_game_button.draw_button(self.screen, self.font)
-        else:
+        if self.state is GUIStates.WHITEPROMO or self.state is GUIStates.BLACKPROMO:
+            self._draw_promotion_menu()
+        if self.state is not GUIStates.MENU:
             self.resign_button.draw_button(self.screen, self.font)
-            if self.active_color == 'w':
-                active_player_text = "White's Turn"
-            elif self.active_color == 'b':
-                active_player_text = "Black's Turn"
-            else:
-                active_player_text = "Invalid active color"
-            active_move = MenuButton(active_player_text,
+        if self.message is not None:
+            active_move = MenuButton(self.message,
                 (self.y_size + self.button_x_offset, 4 * self.button_y_offset + 3 * self.button_height, self.button_width, self.button_height - self.button_y_offset),
                 MenuControls.DONOTHING)
             active_move.draw_button(self.screen, self.font)
+
+    def _draw_promotion_menu(self):
+        """Draw the promotion selection menu."""
+        if self.state == GUIStates.WHITEPROMO:
+            pieces = ["wq", "wr", "wb", "wn"]
+        elif self.state == GUIStates.BLACKPROMO:
+            pieces = ["bq", "br", "bb", "bn"]
+        else:
+            return  # Not in a promotion state, so don't draw anything
+        for i, piece in enumerate(pieces):
+            x = self.y_size + self.button_x_offset + (i % 2) * (self.button_width // 2)
+            y = self.button_y_offset + (i // 2) * (self.button_height)
+            rect = pygame.Rect(x,y,self.square_size,self.square_size)
+            pygame.draw.rect(self.screen, (80, 80, 80), rect)
+            pygame.draw.rect(self.screen, (200, 200, 200), rect, 2)
+            self.screen.blit(self.piece_imgs[piece], (x, y))
             
     def _handle_board_click(self, pos):
         """Translate a board-area click into piece selection or move selection."""
@@ -271,7 +299,7 @@ class GUI:
         row = y // self.square_size
 
         # Ignore clicks outside the board or while the GUI is in the menu state.
-        if not (0 <= row < 8 and 0 <= column < 8) or self.state == GUIStates.MENU:
+        if not (0 <= row < 8 and 0 <= column < 8) or self.state == GUIStates.MENU or self.state == GUIStates.WHITEPROMO or self.state == GUIStates.BLACKPROMO:
             return GUIreturn(MenuControls.DONOTHING)
 
         if self.state == GUIStates.PIECE:
@@ -335,73 +363,6 @@ class GUI:
 
             self.possible_moves.clear()
             return GUIreturn(MenuControls.DONOTHING)
-        
-    """
-    def _handle_board_click_old(self, pos):
-        old version of board click handler, kept for reference while testing new version. Can be removed eventually.
-        (x, y) = pos
-        column = x // self.square_size
-        row = y // self.square_size
-
-        # Ignore clicks outside the board or while the GUI is in the menu state.
-        if not (0 <= row < 8 and 0 <= column < 8) or self.state == GUIStates.MENU:
-            return GUIreturn(MenuControls.DONOTHING)
-
-        if self.state == GUIStates.PIECE:
-            # Piece selection stage: select the piece at the clicked square.
-            piece = self.board[row][column]
-            if piece is None:
-                return GUIreturn(MenuControls.DONOTHING)
-            else:
-                self.state = GUIStates.MOVE
-                square_num = column + 8 * row
-                self.selected_square = square_num
-                match piece:
-                    case "bp":
-                        self.FEN_piece = "p"
-                    case "bn":
-                        self.FEN_piece = "n"
-                    case "bb":
-                        self.FEN_piece = "b"
-                    case "br":
-                        self.FEN_piece = "r"
-                    case "bq":
-                        self.FEN_piece = "q"
-                    case "bk":
-                        self.FEN_piece = "k"
-                    case "wp":
-                        self.FEN_piece = "P"
-                    case "wn":
-                        self.FEN_piece = "N"
-                    case "wb":
-                        self.FEN_piece = "B"
-                    case "wr":
-                        self.FEN_piece = "R"
-                    case "wq":
-                        self.FEN_piece = "Q"
-                    case "wk":
-                        self.FEN_piece = "K"
-
-                return GUIreturn(MenuControls.PIECESELECT, self.FEN_piece, square_num)
-
-        if self.state == GUIStates.MOVE:
-            # Move selection stage: choose a legal destination square.
-            self.state = GUIStates.PIECE
-            temp_selected_square = self.selected_square
-            temp_FEN_piece = self.FEN_piece
-
-            move_square = column + 8 * row
-
-            for move in self.possible_moves:
-                if move == move_square:
-                    self.possible_moves.clear()
-                    self.selected_square = None
-                    self.FEN_piece = None
-                    return GUIreturn(MenuControls.MOVESELECT, temp_FEN_piece, temp_selected_square, move_square)
-
-            self.possible_moves.clear()
-            return GUIreturn(MenuControls.DONOTHING)
-    """
 
     def _handle_menu_click(self, pos):
         """Handle clicks in the menu panel and return the selected menu action."""
@@ -424,5 +385,22 @@ class GUI:
             self.state = GUIStates.PIECE
             self.black_is_disabled = True
             return new_bot_game
+        elif self.state == GUIStates.WHITEPROMO or self.state == GUIStates.BLACKPROMO:
+            x = pos[0]
+            y = pos[1]
+            if (self.y_size + self.button_x_offset <= x <= self.y_size + self.button_x_offset + self.square_size) \
+                and (self.button_y_offset <= y <= self.square_size):
+                return GUIreturn(MenuControls.PROMOTION, "q")
+            elif (self.y_size + self.button_x_offset + self.button_width // 2 <= x <= self.y_size + self.button_x_offset + self.button_width // 2 + self.square_size) \
+                and (self.button_y_offset <= y <= self.square_size):
+                return GUIreturn(MenuControls.PROMOTION, "r")
+            elif (self.y_size + self.button_x_offset <= x <= self.y_size + self.button_x_offset + self.square_size) \
+                and (self.button_y_offset + self.button_height <= y <= self.button_y_offset + self.button_height + self.square_size):
+                return GUIreturn(MenuControls.PROMOTION, "b")
+            elif (self.y_size + self.button_x_offset + self.button_width // 2 <= x <= self.y_size + self.button_x_offset + self.button_width // 2 + self.square_size) \
+                and (self.button_y_offset + self.button_height <= y <= self.button_y_offset + self.button_height + self.square_size):
+                return GUIreturn(MenuControls.PROMOTION, "n")
+            else:
+                return GUIreturn(MenuControls.DONOTHING)
         else:
             return GUIreturn(MenuControls.DONOTHING)
