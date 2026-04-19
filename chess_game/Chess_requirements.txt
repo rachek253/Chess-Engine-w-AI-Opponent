@@ -1,4 +1,4 @@
 pygame
 python-dotenv
-websockets
+websocket-client
 asyncio

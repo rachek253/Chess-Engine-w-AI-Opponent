@@ -6,7 +6,7 @@ from typing import List, Tuple
 from enum import Enum
 import requests
 import os
-from stockfish_bot import StockfishBot
+from API.stockfish_bot import StockfishBot
 
 Position = Tuple[int, int]
 
