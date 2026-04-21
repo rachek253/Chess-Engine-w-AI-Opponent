@@ -13,7 +13,7 @@ This configuration module is responsible for:
 """
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 class Config:
     """
@@ -28,7 +28,7 @@ class Config:
         Function to load environment variables when the configuration 
         object is created.
         """
-        load_dotenv("API.env")
+        load_dotenv(find_dotenv("API.env"))
 
     def get_engine_mode(self):
         """
