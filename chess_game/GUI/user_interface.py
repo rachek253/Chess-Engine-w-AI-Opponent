@@ -32,15 +32,18 @@ class MenuControls(Enum):
     NEWBOTGAME = 6
     PROMOTION = 7
 
+# [GUI_01]
 class GUIreturn:
     """Container for a GUI action result sent back to the game controller."""
 
+    
     def __init__(self, type:MenuControls, piece:str = None, coords:int = None, move:int = None):
         self.type = type  # MenuControls command type
         self.piece = piece  # Piece code in FEN-style notation
         self.coords = coords  # Source square index 0-63
         self.move = move  # Destination square index 0-63
 
+# [GUI_02]
 class MenuButton:
     """Represents a clickable menu button in the side panel."""
 
@@ -48,6 +51,7 @@ class MenuButton:
         self.rect = pygame.Rect(rect)
         self.label = label
         self.type = type
+    
     
     def use_button(self, pos):
         """Return a GUIreturn if the provided mouse position is inside the button."""
@@ -66,6 +70,7 @@ class MenuButton:
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)
 
+# [GUI_03]
 class GUI:
     """Main graphical user interface for displaying the board and menu controls."""
 
@@ -153,6 +158,7 @@ class GUI:
         self._draw_menu()
         pygame.display.flip()
 
+    # [GUI_04]
     def set_possible_moves(self, moves:list):
         """Store the legal target squares for the currently selected piece."""
         self.possible_moves = moves
@@ -160,6 +166,7 @@ class GUI:
             if move < 0 or move > 63:
                 self.possible_moves.remove(move)
 
+    # [GUI_05]
     def handle_input(self, event):
         """Convert a pygame mouse event into a GUI control action."""
         #print("Input detected")
@@ -175,6 +182,7 @@ class GUI:
         else:
             return GUIreturn(MenuControls.DONOTHING)
             
+    # [GUI_06]
     def update_board(self, fen:str):
         """Parse a FEN string and update the internal board matrix."""
         piece_map = {
@@ -237,10 +245,12 @@ class GUI:
         """Set a message to be displayed in the menu area (e.g. for check/checkmate)."""
         self.message = message
 
+    # [GUI_07]
     def _draw_board(self):
         """Draw the chess board background at the origin of the window."""
         self.screen.blit(self.board_img, (0, 0))
 
+    # [GUI_08]
     def _draw_pieces(self):
         """Draw each piece image in the correct board square."""
         for row in range(8):
@@ -252,6 +262,7 @@ class GUI:
                 if piece is not None:
                     self.screen.blit(self.piece_imgs[piece], (x, y))
 
+    # [GUI_09]
     def _draw_dots(self):
         """Draw move indicator dots for each legal target square."""
         for move in self.possible_moves:
@@ -261,6 +272,7 @@ class GUI:
             y = row * self.square_size + (self.square_size - self.dot_size) // 2
             self.screen.blit(self.dot_img, (x, y))
 
+    # [GUI_10]
     def _draw_menu(self):
         """Draw the side panel menu with buttons."""
         if self.state == GUIStates.MENU:
@@ -276,6 +288,7 @@ class GUI:
                 MenuControls.DONOTHING)
             active_move.draw_button(self.screen, self.font)
 
+    # [GUI_11]
     def _draw_promotion_menu(self):
         """Draw the promotion selection menu."""
         if self.state == GUIStates.WHITEPROMO:
@@ -292,6 +305,7 @@ class GUI:
             pygame.draw.rect(self.screen, (200, 200, 200), rect, 2)
             self.screen.blit(self.piece_imgs[piece], (x, y))
             
+    # [GUI_12]
     def _handle_board_click(self, pos):
         """Translate a board-area click into piece selection or move selection."""
         (x, y) = pos
@@ -364,6 +378,7 @@ class GUI:
             self.possible_moves.clear()
             return GUIreturn(MenuControls.DONOTHING)
 
+    # [GUI_13]
     def _handle_menu_click(self, pos):
         """Handle clicks in the menu panel and return the selected menu action."""
         #print("Handle menu click")
