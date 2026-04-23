@@ -8,9 +8,7 @@ requests a move for the AI opponent.
 
 """
 
-import json
-import random
-
+import requests
 from websocket import create_connection
 from API.API_config import Config
 
@@ -37,12 +35,6 @@ class StockfishBot():
     self.variants = self.config.get_bot_variants()
     self.timeout = self.config.get_bot_timeout()
 
-    # Initializing the AI to simulate 500-800 elo
-    self.depth = 1
-    self.movetime = 100
-    self.skill_level = 0
-    self.multiPV = 4
-
   def is_online(self): 
     """
     Checks if the chess engine API is reachable. 
@@ -56,47 +48,40 @@ class StockfishBot():
     except Exception: 
       return False
   
-  def choose_moves(self, board):
-    """
-    Function to request a move from the Stockfish chess engine.
+  def choose_moves(self, board_fen):
+        try:
+            print("\n[BOT] Requesting moves...")
 
-    Parameters: 
-      board: current board representation
+            response = requests.get(
+                "https://stockfish.online/api/s/v2.php",
+                params={
+                    "fen": board_fen,
+                    "depth": 5
+                },
+                timeout=self.timeout
+            )
 
+            data = response.json()
+            bestmove = data.get("bestmove", "")
 
-    Returns:
-      Bot move or None if no move is available.
-    """
-    try:
-      fen = board
-      chess_ws = create_connection(self.ws_url, timeout = self.timeout)
-      
-      payload = { 
-        "fen": fen,
-        "variants": self.variants,
-        "multiPV": self.multiPV  # Ask for top n moves
-      }
-      
-      # leave next 2 lines in case API key gets added to chess-api.com
-      if self.api_key:
-        payload["api_key"] = self.api_key
+            print("[BOT RAW]", data)
 
-      chess_ws.send(json.dumps(payload))
-      response = json.loads(chess_ws.recv())
-      chess_ws.close()
+            if not bestmove:
+                print("[BOT WARNING] No move returned")
+                return None
 
-      # API should return a list of moves if multiPV is used
-      top_moves = response.get("moves")  # list of dicts: [{"move": "e2e4"}, ...]
-      if not top_moves:
-        return None
+            parts = bestmove.split()
 
-      # pick 1 move randomly from the top 4
-      move_str = random.choice(top_moves[:4])["move"]
-      return move_str
+            # Checks for e2e4 format
+            if len(parts) >= 2:
+                move = parts[1]
+            else:
+                move = parts[0]
+            return move
 
-    except Exception as e:
-      print(f"[Bot Error] Unable to retrieve AI move: {e}")
-      return None
+        except Exception as e:
+            print("[BOT ERROR]", repr(e))
+            return None
 
   # please write necessary functions for bot moves
   # feel free to make changes to the following code, I just wanted to give a starting point 
