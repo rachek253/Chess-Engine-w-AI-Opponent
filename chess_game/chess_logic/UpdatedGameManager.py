@@ -519,6 +519,7 @@ class GameManager:
     # ==========================
     # STOCKFISH CONNECTION
     # ==========================
+    print("[DEBUG] About to connect to bot...")
     def bot_move(self):
         if not self.bot: 
             return
@@ -528,6 +529,10 @@ class GameManager:
             if not move_str: 
                 return
 
+            print(f"[DEBUG] FEN sent to bot: {self.fen}")
+            move_str = self.bot.choose_moves(self.fen)
+            print(f"[DEBUG] Bot returned: {move_str}")
+            
             start = (8 - int(move_str[1]), ord(move_str[0]) - 97)
             end = (8 - int(move_str[3]), ord(move_str[2]) - 97)
 
