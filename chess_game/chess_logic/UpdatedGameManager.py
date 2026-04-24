@@ -1,5 +1,5 @@
 # ==============================
-# core/game_manager.py
+# core/game_manager.py [GM_01]
 # ==============================
 
 from typing import List, Tuple
@@ -39,7 +39,7 @@ class GameManager:
         self.game_over = False
 
     # ==========================
-    # FEN ↔ BOARD
+    # FEN ↔ BOARD [GM_02]
     # ==========================
     def fen_to_board(self):
         fen_board, self.active_color, self.castleling_rights, self.en_passant, halfmove_clock, fullmove_number = self.fen.split()
@@ -97,7 +97,7 @@ class GameManager:
         return self.fen
 
     # ==========================
-    # HELPER FUNCTIONS
+    # HELPER FUNCTIONS [GM_03]
     # ==========================
     def is_white(self, p): return p.isupper()
     def is_black(self, p): return p.islower()
@@ -164,7 +164,7 @@ class GameManager:
             self.game_state = GameState.ONGOING
 
     # ==========================
-    # MOVE GENERATION
+    # MOVE GENERATION [GM_04]
     # ==========================
     def get_legal_moves(self, pos, turn):
         board = self.get_board()
@@ -274,7 +274,7 @@ class GameManager:
         return moves
 
     # ==========================
-    # CHECK / CHECKMATE
+    # CHECK / CHECKMATE [GM_05]
     # ==========================
 
     def square_under_attack(self, board, square, active_color):
@@ -378,7 +378,7 @@ class GameManager:
 
 
     # ==========================
-    # MOVE EXECUTION
+    # MOVE EXECUTION [GM_06]
     # ==========================
     def move(self, start, end):
         if self.game_over:
@@ -517,7 +517,7 @@ class GameManager:
         return True
 
     # ==========================
-    # STOCKFISH CONNECTION
+    # STOCKFISH CONNECTION [GM_07]
     # ==========================
     print("[DEBUG] About to connect to bot...")
     def bot_move(self):
