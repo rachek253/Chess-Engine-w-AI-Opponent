@@ -25,10 +25,13 @@ class Config:
 
     def __init__(self):
         """
+        [[SDD_LLD_API_02]]
         Function to load environment variables when the configuration 
         object is created.
         """
-        load_dotenv(find_dotenv("API.env"))
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(base_dir, "API.env")
+        load_dotenv(env_path)
 
     def get_engine_mode(self):
         """
@@ -46,6 +49,7 @@ class Config:
     
     def get_api_key(self): 
         """
+        [[SDD_LLD_API_03]]
         Function to access API key if one is defined in the environment file.
         """
         return os.getenv("CHESS_API_KEY")
@@ -69,6 +73,7 @@ class Config:
     
     def validate(self): 
         """
+        [[SDD_LLD_API_05]]
         Function to validate required environment settings for chess
         application. 
 
