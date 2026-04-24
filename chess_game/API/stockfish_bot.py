@@ -19,6 +19,7 @@ class StockfishBot():
 
   def __init__(self):
     """
+    [[SDD_LLD_API_05]]
     Function to initialize the bot and load runtime configuration
     """
     self.config = Config()
